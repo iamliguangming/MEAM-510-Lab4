@@ -1,7 +1,7 @@
 #include <WiFi.h> //include the wifi file
 #include <WiFiUdp.h>//include the UDP protocal file
 
-const char* ssid = "HZYYYYY";
+const char* ssid = "NANI";
 //const char* password = "19970524";
 const int POTPin = 32;
 const int LED = 0;
@@ -19,7 +19,7 @@ WiFiUDP UDPTestServer;
 const int UDP_PACKET_SIZE = 100;
 char udpBuffer[UDP_PACKET_SIZE];
 byte packetBuffer[UDP_PACKET_SIZE+1];
-IPAddress ipTarget(192,168,1,124);
+IPAddress ipTarget(192,168,1,125);
 IPAddress myIP(192,168,1,142);
 //WiFiServer server(80);
 
@@ -35,7 +35,7 @@ WiFi.mode(WIFI_STA);
 WiFi.config(myIP,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
 WiFi.begin(ssid);
 //server.begin();
-UDPTestServer.begin(2800);
+UDPTestServer.begin(1609);
 
 while (WiFi.status() != WL_CONNECTED)
 {
@@ -246,7 +246,7 @@ Serial.println();
 //void fncUdpSend()
 //{
 //  strcpy(udpBuffer,"Zhageshuaiye!");
-//  UDPTestServer.beginPacket(ipTarget, 2800);
+//  UDPTestServer.beginPacket(ipTarget, 1609);
 //  UDPTestServer.printf("%s",udpBuffer);
 //  UDPTestServer.endPacket();
 //  Serial.println(udpBuffer);
@@ -258,7 +258,7 @@ void fncUdpSendint(int i)
   udpBuffer[0] = i & 0xff;
   udpBuffer[1] = i >> 8 ;
   udpBuffer[2] = 0;
-  UDPTestServer.beginPacket(ipTarget, 2800);
+  UDPTestServer.beginPacket(ipTarget, 1609);
   UDPTestServer.printf("%s",udpBuffer);
   UDPTestServer.endPacket();
   
