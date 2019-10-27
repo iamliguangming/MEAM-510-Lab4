@@ -1,46 +1,26 @@
 /*
-  Blink
-
-  Turns an LED on for one second, then off for one second, repeatedly.
-
-  Most Arduinos have an on-board LED you can control. On the UNO, MEGA and ZERO
-  it is attached to digital pin 13, on MKR1000 on pin 6. LED_BUILTIN is set to
-  the correct LED pin independent of which board is used.
-  If you want to know what pin the on-board LED is connected to on your Arduino
-  model, check the Technical Specs of your board at:
-  https://www.arduino.cc/en/Main/Products
-
-  modified 8 May 2014
-  by Scott Fitzgerald
-  modified 2 Sep 2016
-  by Arturo Guadalupi
-  modified 8 Sep 2016
-  by Colby Newman
-
-  This example code is in the public domain.
-
-  http://www.arduino.cc/en/Tutorial/Blink
+Lab 4.1.2
+Author Yupeng Li
 */
-const int External_LED = 0;
-int Input_Pin = 25;
-int val = 0;
+const int External_LED = 0;//Set P0 as the external LED output
+int Input_Pin = 25;//set P25 as the input pin
+int val = 0;//set a value used to store the analog read
 
 // the setup function runs once when you press reset or power the board
 void setup() {
-  // initialize digital pin LED_BUILTIN as an output.
-  pinMode(External_LED, OUTPUT);
-  Serial.begin(115200);
+  pinMode(External_LED, OUTPUT);//set the  external led port as output
+  Serial.begin(115200);//begin the serial communication at 115200 bauds
 
 }
 
 // the loop function runs over and over again forever
 void loop() {
-  val = map(analogRead(Input_Pin),0,4095,100,10000);
-  Serial.println(val);
-  
+  val = map(analogRead(Input_Pin),0,4095,100,10000);//map the voltage read value to 100-10000ms
+  Serial.println(val);//print out the value read from the analog pin
+
   digitalWrite(External_LED, HIGH);   // turn the LED on (HIGH is the voltage level)                     // wait for a second
-  delay(val/2);
+  delay(val/2);//wait for half of period
   digitalWrite(External_LED, LOW);    // turn the LED off by making the voltage LOW                       // wait for a second
-  delay(val/2);
+  delay(val/2);//wait for half of period
 
 }
