@@ -1,7 +1,9 @@
-#define POT 32 // setting up the pot, led, and switch to the GPIO pins that do not get affected in WIFI
-
 #include <WiFi.h> //libraries
 #include <WiFiUdp.h>
+
+const int POT = 32; // setting up the pot, led, and switch to the GPIO pins that do not get affected in WIFI
+void receivePacket();
+void sendPacket();
 
 int potread; // initializing the reading from the pot that has been mapped
 int cb = 0; // the size of the packet received. 0 if no packet received
@@ -9,7 +11,7 @@ int port = 1609; // my local port
 int targetPort = 1609; // other player's port
 int MessageSent = 0;
 //both for send and receive
-const char* ssid = "NANI"; // my wifi name since I am in AP mode
+const char* ssid = "SmartGuangming"; // my wifi name since I am in AP mode
 //const char* password = "GDI";
 
 //WiFiServer server(port);
@@ -37,56 +39,63 @@ void setup() {
   pinMode(2, OUTPUT);
 //
 //  //station mode
-//  WiFi.mode(WIFI_STA);
-//  WiFi.config(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
-//  WiFi.begin(ssid);
+ WiFi.mode(WIFI_STA);
+ WiFi.config(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+ WiFi.begin(ssid);
 
     //AP mode
-    WiFi.mode(WIFI_AP);
-    WiFi.softAP(ssid);
-    delay(100);
-    WiFi.softAPConfig(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+    // WiFi.mode(WIFI_AP);
+    // WiFi.softAP(ssid);
+    // delay(100);
+    // WiFi.softAPConfig(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 
   udp.begin(port); // starting the udp communications
   UDPTestServer.begin(port);
 //
-//  while (WiFi.status() != WL_CONNECTED) {
-//    delay(500);
-//    Serial.print(".");
-//  }
-//  Serial.println("WiFi connected");
+ while (WiFi.status() != WL_CONNECTED) {
+   delay(500);
+   Serial.print(".");
+ }
+ Serial.println("WiFi connected");
   packetBuffer[UDP_PACKET_SIZE] = 0; // null terminate
 
 }
 
 void loop() {
-  MessageSent = map(analogRead(POT),0,4095,-1000,1000);
+  MessageSent = map(analogRead(POT),0,4095,1000,3000);
+  Serial.println(MessageSent);
   sendPacket();
 
 
 
 }
-
-void receivePacket() { // FOR RECEIVING
-  cb = UDPTestServer.parsePacket(); // parse packet. Sees if I get something
-  if(cb){ // If I did
-    UDPTestServer.read(packetBuffer, UDP_PACKET_SIZE); // read the packet, though it is in bytes
-//    Serial.printf("%s\n", packetBuffer);
-//    int first = (int)(packetBuffer[0]);
-//    int second = (int)(packetBuffer[1]<<8);
-    got = (packetBuffer[1]<<8) | packetBuffer[0]; // convert it to an integer
-    Serial.println(got);
+//
+//void receivePacket() { // FOR RECEIVING
+//  cb = UDPTestServer.parsePacket(); // parse packet. Sees if I get something
+//  if(cb){ // If I did
+//    UDPTestServer.read(packetBuffer, UDP_PACKET_SIZE); // read the packet, though it is in bytes
+////    Serial.printf("%s\n", packetBuffer);
+////    int first = (int)(packetBuffer[0]);
+////    int second = (int)(packetBuffer[1]<<8);
+//    val = (packetBuffer[1]<<8) | packetBuffer[0]; // convert it to an integer
+//    Serial.println(got);
 //    cb = 0;
-  }
-}
+//  }
+//}
 
 void sendPacket() {
 //  char buf[8];
 //  itoa(tenth, buf, 10);
 //  strcpy(udpBuffer, buf);// send what ever you want upto buffer size
+  if(MessageSent >= 256){
   udpBuffer[0] = MessageSent & 0xff; // send LSB
   udpBuffer[1] = MessageSent >> 8; // send MSB
   udpBuffer[2] = 0; // null terminate
+  }
+  else if (MessageSent < 256){
+    udpBuffer[0]  = MessageSent & 0xff;
+    udpBuffer[1] = 0;
+  }
   udp.beginPacket(ipTarget, targetPort);  // send to opponent port
   udp.printf("%s", udpBuffer);
   udp.endPacket(); // end msg

@@ -5,7 +5,7 @@ int cb = 0;
 int val = 0;
 void receivePacket();
 int MessageReceived = 0;
-const char* ssid = "NANI";
+const char* ssid = "SmartGuangming";
 WiFiUDP  UDPTestServer;
 IPAddress myIPaddress(192,168,1,142);
 const int UDP_PACKET_SIZE = 100;
@@ -29,17 +29,22 @@ void setup() {
   // put your setup code here, to run once:
 Serial.begin(115200);
 Serial.println();
-Serial.print("Connecting to");
-Serial.println(ssid);
-WiFi.mode(WIFI_STA);
-WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
-WiFi.begin(ssid);
-while (WiFi.status()!=WL_CONNECTED);
-{
-  delay(500);
-  Serial.print(".");
-}
-Serial.println("WiFi Connected ");
+// Serial.print("Connecting to");
+// Serial.println(ssid);
+// WiFi.mode(WIFI_STA);
+// WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
+// WiFi.begin(ssid);
+// while (WiFi.status()!=WL_CONNECTED);
+// {
+//   delay(500);
+//   Serial.print(".");
+// }
+// Serial.println("WiFi Connected ");
+WiFi.mode(WIFI_AP);
+WiFi.softAP(ssid);
+delay(100);
+WiFi.softAPConfig(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
+UDPTestServer.begin(port);
 packetBuffer[UDP_PACKET_SIZE] = 0;
 ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);
 ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);
@@ -55,16 +60,19 @@ pinMode(FrontorBack,INPUT);
 void loop() {
   // put your main code here, to run repeatedly:
   receivePacket();
-  uint32_t duty = LEDC_RESOLUTION*abs(val)/1000;
-  Serial.println(val);
-  if (val >= 0){
+  int psudoduty = val -2000;
+  Serial.println(psudoduty);
+  uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;
+  if ((psudoduty) >= 0){
   digitalWrite(A1,HIGH);
   digitalWrite(A44,HIGH);
+  Serial.println("Rotating forward");
 //  duty = LEDC_RESOLUTION*val/1000;
   }
-  else if (val<0)
+  else if ((psudoduty)<0)
   {
 //  duty = LEDC_RESOLUTION*(1000-val)/1000;
+  Serial.println("Rotating backward");
   digitalWrite(A1,LOW);
   digitalWrite(A44,LOW);
   }
@@ -78,7 +86,7 @@ void receivePacket(){
   if (cb){
     UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);
     val = (packetBuffer[1]<<8 |packetBuffer[0]);
-    Serial.print(val);
+    delay(100);
 
   }
 }
