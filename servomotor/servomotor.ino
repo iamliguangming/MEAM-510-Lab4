@@ -16,10 +16,11 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int val = map(analogRead(ServoInput),0,4095,0,1000);
-  uint32_t duty = LEDC_RESOLUTION*min(val,1000)/1000;
+  int val = map(analogRead(ServoInput),0,4095,450,1050);
+  uint32_t duty = LEDC_RESOLUTION* val /10000;
   Serial.println(val);
   ledcWrite(LEDC_CHANNEL,duty);
-  
+
 
 }
+//LDE 0.045 RDE 0.105 (Duty Cycle)
