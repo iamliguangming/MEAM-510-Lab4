@@ -10,8 +10,8 @@ pinMode(joystickY,OUTPUT);
 
 void loop() {
   // put your main code here, to run repeatedly:
-  int x = analogRead(joystickX);
-  int y = analogRead(joystickY);
+  int x = map(analogRead(joystickX),0,4095,-1000,1000);
+  int y = map(analogRead(joystickY),0,4095,-1000,1000);
   Serial.println("X location");
   Serial.println(x);
   Serial.println("Y location");
