@@ -2,6 +2,7 @@
 #include <WiFiUdp.h>
 
 const int POT = 32; // setting up the pot, led, and switch to the GPIO pins that do not get affected in WIFI
+const int SERVOPOT = 33;
 void receivePacket();
 void sendPacket();
 
@@ -10,6 +11,8 @@ int cb = 0; // the size of the packet received. 0 if no packet received
 int port = 1609; // my local port
 int targetPort = 1609; // other player's port
 int MessageSent = 0;
+int SERVOMessageSent = 0;
+int servopotread = 0;
 //both for send and receive
 const char* ssid = "SmartGuangming"; // my wifi name since I am in AP mode
 //const char* password = "GDI";
@@ -37,6 +40,7 @@ void setup() {
   Serial.println(ssid);
   pinMode(POT, INPUT); // setting up the pot, leds, and switch
   pinMode(2, OUTPUT);
+  pinMode(SERVOPOT,INPUT);
 //
 //  //station mode
  WiFi.mode(WIFI_STA);
@@ -63,8 +67,12 @@ void setup() {
 
 void loop() {
   MessageSent = map(analogRead(POT),0,4095,1000,3000);
-  Serial.println(MessageSent);
   sendPacket();
+  Serial.println(MessageSent);
+  MessageSent = map(analogRead(SERVOPOT),0,4095,4000,5000);
+  
+  sendPacket();
+  Serial.println(MessageSent);
 
 
 
