@@ -31,22 +31,22 @@ void setup() {
   // put your setup code here, to run once:
 Serial.begin(115200);
 Serial.println();
-// Serial.print("Connecting to");
-// Serial.println(ssid);
-// WiFi.mode(WIFI_STA);
-// WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
-// WiFi.begin(ssid);
-// while (WiFi.status()!=WL_CONNECTED);
-// {
-//   delay(500);
-//   Serial.print(".");
-// }
-// Serial.println("WiFi Connected ");
-WiFi.mode(WIFI_AP);
-WiFi.softAP(ssid);
-delay(100);
-WiFi.softAPConfig(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
-UDPTestServer.begin(port);
+Serial.print("Connecting to");
+Serial.println(ssid);
+WiFi.mode(WIFI_STA);
+WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
+WiFi.begin(ssid);
+while (WiFi.status()!=WL_CONNECTED);
+{
+  delay(500);
+  Serial.print(".");
+}
+Serial.println("WiFi Connected ");
+// WiFi.mode(WIFI_AP);
+// WiFi.softAP(ssid);
+// delay(100);
+// WiFi.softAPConfig(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
+// UDPTestServer.begin(port);
 packetBuffer[UDP_PACKET_SIZE] = 0;
 ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);
 ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);
@@ -100,7 +100,7 @@ void receivePacket(){
   if (cb){
     UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);
     val = (packetBuffer[1]<<8 |packetBuffer[0]);
-    
+
 
   }
 }

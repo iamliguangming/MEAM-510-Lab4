@@ -35,32 +35,32 @@ IPAddress ipTarget(192, 168, 1, 142); //partner's IP address.
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200); // baud rate
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  // Serial.println();
+  // Serial.print("Connecting to ");
+  // Serial.println(ssid);
   pinMode(POT, INPUT); // setting up the pot, leds, and switch
   pinMode(2, OUTPUT);
   pinMode(SERVOPOT,INPUT);
 //
 //  //station mode
- WiFi.mode(WIFI_STA);
- WiFi.config(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
- WiFi.begin(ssid);
+ // WiFi.mode(WIFI_STA);
+ // WiFi.config(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+ // WiFi.begin(ssid);
 
     //AP mode
-    // WiFi.mode(WIFI_AP);
-    // WiFi.softAP(ssid);
-    // delay(100);
-    // WiFi.softAPConfig(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
+    WiFi.mode(WIFI_AP);
+    WiFi.softAP(ssid);
+    delay(100);
+    WiFi.softAPConfig(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 
   udp.begin(port); // starting the udp communications
   UDPTestServer.begin(port);
 //
- while (WiFi.status() != WL_CONNECTED) {
-   delay(500);
-   Serial.print(".");
- }
- Serial.println("WiFi connected");
+ // while (WiFi.status() != WL_CONNECTED) {
+ //   delay(500);
+ //   Serial.print(".");
+ // }
+ // Serial.println("WiFi connected");
   packetBuffer[UDP_PACKET_SIZE] = 0; // null terminate
 
 }
@@ -70,7 +70,7 @@ void loop() {
   sendPacket();
   Serial.println(MessageSent);
   MessageSent = map(analogRead(SERVOPOT),0,4095,4000,5000);
-  
+
   sendPacket();
   Serial.println(MessageSent);
 
