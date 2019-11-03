@@ -46,7 +46,7 @@ Serial.println("WiFi Connected ");
 // WiFi.softAP(ssid);
 // delay(100);
 // WiFi.softAPConfig(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
-// UDPTestServer.begin(port);
+ UDPTestServer.begin(port);
 packetBuffer[UDP_PACKET_SIZE] = 0;
 ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);
 ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);

@@ -66,13 +66,15 @@ void setup() {
 }
 
 void loop() {
-  MessageSent = map(analogRead(POT),0,4095,1000,3000);
+  MessageSent = map(analogRead(POT),0,4095,3000,1000);
   sendPacket();
   Serial.println(MessageSent);
-  MessageSent = map(analogRead(SERVOPOT),0,4095,4000,5000);
-
+  for (int i = 0;i <=3;i++)
+  {
+  MessageSent = map(analogRead(SERVOPOT),0,4095,4095,5000);
   sendPacket();
   Serial.println(MessageSent);
+  }
 
 
 
