@@ -36,6 +36,7 @@ Serial.println(ssid);
 WiFi.mode(WIFI_STA);
 WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
 WiFi.begin(ssid);
+WiFi.setSleep(false);
 while (WiFi.status()!=WL_CONNECTED);
 {
   delay(500);

@@ -50,6 +50,7 @@ void setup() {
     //AP mode
     WiFi.mode(WIFI_AP);
     WiFi.softAP(ssid);
+    WiFi.setSleep(false);
     delay(100);
     WiFi.softAPConfig(myIPaddress, IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
 
@@ -109,5 +110,5 @@ void sendPacket() {
   udp.beginPacket(ipTarget, targetPort);  // send to opponent port
   udp.printf("%s", udpBuffer);
   udp.endPacket(); // end msg
-  delay(100); // used to prevent multiple msgs from a long press of a button.
+  // delay(100); // used to prevent multiple msgs from a long press of a button.
 }
