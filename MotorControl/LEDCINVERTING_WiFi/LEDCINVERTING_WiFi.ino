@@ -1,31 +1,31 @@
-#include <WiFi.h>;
-#include <WiFiUdp.h>;
-int port = 1609;
-int cb = 0;
-int val = 0;
-void receivePacket();
-int MessageReceived = 0;
-const char* ssid = "SmartGuangming";
-WiFiUDP  UDPTestServer;
-IPAddress myIPaddress(192,168,1,142);
-const int UDP_PACKET_SIZE = 100;
-byte packetBuffer[UDP_PACKET_SIZE + 1];
-char udpBuffer[UDP_PACKET_SIZE];
-IPAddress ipTarget(192,168,1,125);
+#include <WiFi.h>;//include WiFi library
+#include <WiFiUdp.h>;//include UDP packet
+int port = 1609;//Port number 1609 used for communication
+int cb = 0;//A flag used to tell if a package is received
+int val = 0;//A value used to store analogread value
+void receivePacket();//function prototype for receiving packet
+int MessageReceived = 0;//declare the messagereceived integer
+const char* ssid = "SmartGuangming";//initialize WiFi name
+WiFiUDP  UDPTestServer;//Setup UDP protocal
+IPAddress myIPaddress(192,168,1,142);//Declare my own IP address
+const int UDP_PACKET_SIZE = 100;//declare the packet size to be 100
+byte packetBuffer[UDP_PACKET_SIZE + 1];//delcare the an array with size of packet+1
+char udpBuffer[UDP_PACKET_SIZE];//declare an array with size of udp packet
+IPAddress ipTarget(192,168,1,125);//declare the ipaddress sending packet to
 
-const int LEDC_CHANNEL = 0;
-const int LEDC_CHANNEL1 = 1;
-const int LEDC_CHANNEL_SERVO = 2;
-const int LEDC_RESOLUTION_BITS=13;
-const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);
-const int LEDC_FREQ_HZ = 5000;
-const int LEDC_FREQ_HZ_SERVO = 50;
-const int A1= 21;
-const int A44 =22;
-const int Enable=4;
-const int Enable1 = 0;
-const int EnableControl = 32;
-const int ServoControl = 33;
+const int LEDC_CHANNEL = 0;//interrupt channel 0
+const int LEDC_CHANNEL1 = 1;//interrupt channel 1
+const int LEDC_CHANNEL_SERVO = 2;//interrupt channel 2
+const int LEDC_RESOLUTION_BITS=13;//bits of resolution is 13
+const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
+const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
+const int LEDC_FREQ_HZ_SERVO = 50;//interrupt frequency for servo set to be 50
+const int A1= 21;//1A used to control the direction on H bridge
+const int A44 =22;//4A used to control the NOT direction on H bridge
+const int Enable=4;//Enable pin used to control the PWM on H bridge 1
+const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
+// const int EnableControl = 32;
+// const int ServoControl = 33;
 
 void setup() {
   // put your setup code here, to run once:
@@ -57,8 +57,8 @@ ledcAttachPin(Enable1,LEDC_CHANNEL1);
 ledcAttachPin(ServoControl,LEDC_CHANNEL_SERVO);
 pinMode(A1,OUTPUT);
 pinMode(A44,OUTPUT);
-pinMode(EnableControl,INPUT);
-pinMode(ServoControl,OUTPUT);
+// pinMode(EnableControl,INPUT);
+// pinMode(ServoControl,OUTPUT);
 
 }
 
