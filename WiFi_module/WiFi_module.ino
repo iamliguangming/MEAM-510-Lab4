@@ -67,12 +67,8 @@ void setup() {
 }
 
 void loop() {
-  MessageSent = map(analogRead(POT),0,4095,3000,1000);
-  sendPacket();
-  Serial.println(MessageSent);
-  for (int i = 0;i <=3;i++)
-  {
-  MessageSent = map(analogRead(SERVOPOT),0,4095,4095,5000);
+  potread = map(analogRead(POT),0,4095,3000,1000);
+  servopotread = map(analogRead(SERVOPOT),0,4095,4095,5000);
   sendPacket();
   Serial.println(MessageSent);
   }
@@ -98,15 +94,13 @@ void sendPacket() {
 //  char buf[8];
 //  itoa(tenth, buf, 10);
 //  strcpy(udpBuffer, buf);// send what ever you want upto buffer size
-  if(MessageSent >= 256){
-  udpBuffer[0] = MessageSent & 0xff; // send LSB
-  udpBuffer[1] = MessageSent >> 8; // send MSB
-  udpBuffer[2] = 0; // null terminate
-  }
-  else if (MessageSent < 256){
-    udpBuffer[0]  = MessageSent & 0xff;
-    udpBuffer[1] = 0;
-  }
+
+  udpBuffer[0] = potread & 0xff; // send LSB
+  udpBuffer[1] = potread >> 8; // send MSB
+  udpBuffer[2] = servopotread  & 0xff;
+  udpBuffer[3] = servopotread >> 8;
+  udpBuffer[4] = 0; // null terminate
+
   udp.beginPacket(ipTarget, targetPort);  // send to opponent port
   udp.printf("%s", udpBuffer);
   udp.endPacket(); // end msg
