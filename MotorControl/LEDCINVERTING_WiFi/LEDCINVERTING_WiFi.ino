@@ -30,7 +30,7 @@ const int A44 =22;//4A used to control the NOT direction on H bridge
 const int Enable=4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 // const int EnableControl = 32;
-// const int ServoControl = 33;
+ const int ServoControl = 33;
 
 void setup() {
   // put your setup code here, to run once:
@@ -92,10 +92,9 @@ void loop() {
   }
   ledcWrite(LEDC_CHANNEL,duty);
   ledcWrite(LEDC_CHANNEL1,duty);
-}
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;
     Serial.println("Servo duty");
-    Serial.println(map(val,4000,5000,450,1050));
+    Serial.println(map(servoread,4000,5000,450,1050));
     ledcWrite(LEDC_CHANNEL_SERVO,servoduty);
   cb = 0;
 }
