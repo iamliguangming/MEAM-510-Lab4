@@ -41,6 +41,7 @@ void setup() {
   pinMode(POT, INPUT); // setting up the pot, leds, and switch
   pinMode(2, OUTPUT);
   pinMode(SERVOPOT,INPUT);
+  WiFi.setSleep(false);
 //
 //  //station mode
  // WiFi.mode(WIFI_STA);
@@ -104,4 +105,6 @@ void sendPacket() {
   udp.beginPacket(ipTarget, targetPort);  // send to opponent port
   udp.printf("%s", udpBuffer);
   udp.endPacket(); // end msg
+
+
 }
