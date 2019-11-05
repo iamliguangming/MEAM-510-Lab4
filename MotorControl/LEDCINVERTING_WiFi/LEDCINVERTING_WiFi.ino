@@ -1,5 +1,5 @@
 /*This is the code running on the Receiver Side
-The cart is running on station mode, which connects to the access point on the controller
+The car is running on station mode, which connects to the access point on the controller
 Author: Yupeng Li */
 
 #include <WiFi.h>;//include WiFi library
@@ -7,7 +7,7 @@ Author: Yupeng Li */
 int port = 1609;//Port number 1609 used for communication
 int cb = 0;//A flag used to tell if a package is received
 int val = 0;//A value used to store analogread value
-int servoread = 0;
+int servoread = 0;//A value used to store servo receving value
 void receivePacket();//function prototype for receiving packet
 int MessageReceived = 0;//declare the messagereceived integer
 const char* ssid = "SmartGuangming";//initialize WiFi name
@@ -29,8 +29,7 @@ const int A1= 21;//1A used to control the direction on H bridge
 const int A44 =22;//4A used to control the NOT direction on H bridge
 const int Enable=4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
-// const int EnableControl = 32;
- const int ServoControl = 33;
+const int ServoControl = 33;//Servo control pin used to control the PWM for the servo
 
 void setup() {
   // put your setup code here, to run once:
@@ -75,36 +74,41 @@ void loop() {
   // put your main code here, to run repeatedly:
   receivePacket();//run the receive packet subroutine
   int psudoduty = val -2000;//remap the DC PWM received -> -1000 to 1000
-  Serial.println(psudoduty);//Print out the received value (for)
-  uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;
+  Serial.println(psudoduty);//Print out the received value (for debugging)
+  uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
+
+//When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
   if ((psudoduty) >= 0){
   digitalWrite(A1,HIGH);
   digitalWrite(A44,HIGH);
   Serial.println("Rotating forward");
-//  duty = LEDC_RESOLUTION*val/1000;
   }
+
+  //When the psudoduty is smaller than 0, turn the wheels backward by setting both direction pins to LOW
   else if ((psudoduty)<0)
   {
-//  duty = LEDC_RESOLUTION*(1000-val)/1000;
   Serial.println("Rotating backward");
   digitalWrite(A1,LOW);
   digitalWrite(A44,LOW);
   }
-  ledcWrite(LEDC_CHANNEL,duty);
-  ledcWrite(LEDC_CHANNEL1,duty);
-    uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;
+
+  ledcWrite(LEDC_CHANNEL,duty);//Run the motors at given duty cycle to control there speed
+  ledcWrite(LEDC_CHANNEL1,duty);//Run the motors at given duty cycle to control there speed
+    uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
     Serial.println("Servo duty");
-    Serial.println(map(servoread,4000,5000,450,1050));
-    ledcWrite(LEDC_CHANNEL_SERVO,servoduty);
-  cb = 0;
+    Serial.println(map(servoread,4000,5000,450,1050));//Print out the servo duty(For debugging)
+    ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
+  cb = 0;//Set the receive pack back to 0
 }
 
+
+/*Subroutine used to receive and parse packet*/
 void receivePacket(){
-  cb = UDPTestServer.parsePacket();
-  if (cb){
-    UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);
-    val = (packetBuffer[1]<<8 |packetBuffer[0]);
-    servoread = (packetBuffer[3]<<8|packetBuffer[2]);
+  cb = UDPTestServer.parsePacket();//Set cb to the length of the packet received
+  if (cb){//When cb is not 0
+    UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);//Read packetbuffer with UDP_PACKET_SIZE from the UDP packet received
+    val = (packetBuffer[1]<<8 |packetBuffer[0]);//Save the first two bytes of the packet received as the PWM for DC motors
+    servoread = (packetBuffer[3]<<8|packetBuffer[2]);//Save the second two bytes of the packet received as the PWM for servo motors
 
   }
 }
