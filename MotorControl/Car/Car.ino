@@ -1,7 +1,7 @@
 /*This is the code running on the Receiver Side
 The car is running on station mode, which connects to the access point on the controller
 Author: Yupeng Li */
-
+//GPIO 4 USED for the WEAPON SWITCH
 #include <WiFi.h>;//include WiFi library
 #include <WiFiUdp.h>;//include UDP packet
 int port = 1609;//Port number 1609 used for communication
@@ -26,7 +26,7 @@ const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
 const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
 const int LEDC_FREQ_HZ_SERVO = 50;//interrupt frequency for servo set to be 50
 const int A1= 21;//1A used to control the direction on H bridge
-const int A44 =4;//4A used to control the NOT direction on H bridge
+const int N_A1 =4;//4A used to control the NOT direction on H bridge
 const int Enable=22;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 33;//Servo control pin used to control the PWM for the servo
@@ -64,7 +64,7 @@ ledcAttachPin(Enable,LEDC_CHANNEL);//Attach ledc at LEDC_CHANNEL to PWM1
 ledcAttachPin(Enable1,LEDC_CHANNEL1);//Attch ledc at LEDC_CHANNEL_1 to PWM2
 ledcAttachPin(ServoControl,LEDC_CHANNEL_SERVO);//Attach ledc at LEDC_CHANNEL_SERVO to servo control pin
 pinMode(A1,OUTPUT);//Set 1A as output
-pinMode(A44,OUTPUT);//Set 4A as output
+pinMode(N_A1,OUTPUT);//Set 4A as output
 // pinMode(EnableControl,INPUT);
 pinMode(ServoControl,OUTPUT);//Set ServoControl as output
 
@@ -80,7 +80,7 @@ void loop() {
 //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
   if ((psudoduty) >= 0){
   digitalWrite(A1,HIGH);
-  digitalWrite(A44,LOW);
+  digitalWrite(N_A1,LOW);
   Serial.println("Rotating forward");
   }
 
@@ -89,7 +89,7 @@ void loop() {
   {
   Serial.println("Rotating backward");
   digitalWrite(A1,LOW);
-  digitalWrite(A44,HIGH);
+  digitalWrite(N_A1,HIGH);
   }
 
   ledcWrite(LEDC_CHANNEL,duty);//Run the motors at given duty cycle to control there speed
