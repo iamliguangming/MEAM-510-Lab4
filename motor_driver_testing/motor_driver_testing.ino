@@ -20,7 +20,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   int potRead = map(analogRead(pot), 0, 4095, -10, 10);
-//  Serial.println(potRead);
+  Serial.println(potRead);
   if(potRead >= 0){
     digitalWrite(dir, HIGH);
     digitalWrite(ndir, LOW);

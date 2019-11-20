@@ -26,8 +26,8 @@ const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
 const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
 const int LEDC_FREQ_HZ_SERVO = 50;//interrupt frequency for servo set to be 50
 const int A1= 21;//1A used to control the direction on H bridge
-const int A44 =22;//4A used to control the NOT direction on H bridge
-const int Enable=4;//Enable pin used to control the PWM on H bridge 1
+const int A44 =4;//4A used to control the NOT direction on H bridge
+const int Enable=22;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 33;//Servo control pin used to control the PWM for the servo
 
@@ -80,7 +80,7 @@ void loop() {
 //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
   if ((psudoduty) >= 0){
   digitalWrite(A1,HIGH);
-  digitalWrite(A44,HIGH);
+  digitalWrite(A44,LOW);
   Serial.println("Rotating forward");
   }
 
@@ -89,7 +89,7 @@ void loop() {
   {
   Serial.println("Rotating backward");
   digitalWrite(A1,LOW);
-  digitalWrite(A44,LOW);
+  digitalWrite(A44,HIGH);
   }
 
   ledcWrite(LEDC_CHANNEL,duty);//Run the motors at given duty cycle to control there speed
