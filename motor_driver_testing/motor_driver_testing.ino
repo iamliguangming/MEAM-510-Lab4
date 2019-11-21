@@ -2,8 +2,8 @@
 #define pwm 22
 #define dir 21
 #define ndir 4
-#define e1 33
-#define e2 27
+//#define e1 33
+//#define e2 27
 
 
 void setup() {
@@ -13,8 +13,8 @@ void setup() {
   pinMode(pwm, OUTPUT);
   pinMode(dir, OUTPUT);
   pinMode(ndir,OUTPUT);
-  pinMode(e1, INPUT);
-  pinMode(e2, INPUT);
+//  pinMode(e1, INPUT);
+//  pinMode(e2, INPUT);
 }
 
 void loop() {
