@@ -40,6 +40,7 @@ int flagy = 0;
 int start = 0 ;
 int counter = 0;
 int timediff = 0;
+int endofAuto = 1;
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 //The following function is stored in RAM for interrupt
@@ -112,6 +113,11 @@ WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
 //Set up IP address, GateWay and Mask
 WiFi.begin(ssid);//Begin WiFi connection at selected WiFi name
 WiFi.setSleep(false);//Set mode of WiFi to let it never sleep
+if (endofAuto == 0)
+{
+  detachInterrupt(digitalPinToInterrupt(PhotoDiode));
+
+}
 while (WiFi.status()!=WL_CONNECTED);//A loop runs until WiFi is connected
 {
   delay(500);//wait for 0.5 seconds
