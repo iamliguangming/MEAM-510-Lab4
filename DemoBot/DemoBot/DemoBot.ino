@@ -346,7 +346,7 @@ void ShowHealth(int health)
       int hpDiff = maxHp - health;
       if(hpDiff > 0){
         int minusHp = hpDiff*multiplier;
-        for(int i = maxHp - minusHp; i< healthLength; i++){
+        for(int i = 0; i < minusHp; i++){
           leds[healthLeds[i]] = 0;
         }
       }
@@ -361,9 +361,16 @@ void clearLEDs(void)
     }
 }
 
+
+int maxTime = 15;
+
 void ShowRespawnTimer(int respawnTime)
 {
     // TODO: implement this function
+    int numberleds = map(respawnTime,0,maxTime,0,24);
+    for(int i = 0; i <= numberleds; i++){
+      leds[i] = RED;
+    }
 }
 // =================================================================
 // ========================== LED end ==============================
