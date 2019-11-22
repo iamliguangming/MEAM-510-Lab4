@@ -213,7 +213,7 @@ FASTLED_USING_NAMESPACE
 
 // ===== GAME VARIABLES =====
 // change ROBOTNUM (1-4) and TEAMCOLOR (BLUE or RED) as necessary
-#define ROBOTNUM    4               // robot number on meta team (1-4)
+#define ROBOTNUM    2               // robot number on meta team (1-4)
 #define TEAMCOLOR   BLUE            // color for the robot team, either RED or BLUE
 // ==========================
 
@@ -330,9 +330,12 @@ void ShowHealth(int health)
 {
     // TODO: implement this function
     int healthLength = 20;
-    
-    if(first){
+    Serial.print( "HEALTH " );
+    Serial.println(health);
+    if(first && (health != 0)){
       maxHp = health;
+    Serial.print( "Max hp " );
+    Serial.println(maxHp);
       for(int i = 0; i < healthLength; i++){
         leds[healthLeds[i]] = HEALTHCOLOR;
       }
@@ -450,6 +453,7 @@ void loop()
     if (health == 0)
     {
         clearLEDs();
+        first=1;
         ShowRespawnTimer(respawnTimer);
     }
 
