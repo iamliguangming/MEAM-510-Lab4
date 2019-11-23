@@ -45,11 +45,11 @@ const int LEDC_RESOLUTION_BITS=13;//bits of resolution is 13
 const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
 const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
 const int LEDC_FREQ_HZ_SERVO = 50;//interrupt frequency for servo set to be 50
-const int A1= 21;//1A used to control the direction on H bridge
-const int N_A1 =22;//4A used to control the NOT direction on H bridge
-const int Enable=4;//Enable pin used to control the PWM on H bridge 1
+const int A1= 18;//1A used to control the direction on H bridge
+const int N_A1 = 19;//4A used to control the NOT direction on H bridge
+const int Enable = 4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
-const int ServoControl = 18;//Servo control pin used to control the PWM for the servo
+const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;
 
 /*Constants for WiFiUDP*/
