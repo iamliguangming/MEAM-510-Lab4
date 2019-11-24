@@ -4,7 +4,7 @@ Note that the controller is in AP which can be accessed by the running car*/
 #include <WiFi.h> //libraries
 #include <WiFiUdp.h>
 
-#define TRIGGER 4
+#define trigger 4
 const int POT = 32; // Setting up the pin to control remote DC motors
 const int SERVOPOT = 33;//Setting up the pot to control remote servo motor
 void sendPacket();//Function prototye to send integer package
@@ -43,7 +43,7 @@ void setup() {
   // Serial.println(ssid);
   pinMode(POT, INPUT); // setting up the pot input for speed of DC motors
   pinMode(SERVOPOT,INPUT);// setting up the pot input for speed of servo motor
-  pinMode(TRIGGER, INPUT); //setting up the button for the attack/defend mechanism
+  pinMode(trigger, INPUT); //setting up the button for the attack/defend mechanism
   WiFi.setSleep(false);//Set WiFi to never fall into sleep mode ;
 //
 //  //station mode
@@ -70,9 +70,10 @@ void setup() {
 }
 
 void loop() {//a loop runs forever
-  potread = map(analogRead(POT),0,4095,3000,1000);//read POT value and map it between 3000 and 1000
-  servopotread = map(analogRead(SERVOPOT),0,4095,4095,5000);//read servopot value and map it between 4095-5000
-  buttonRead = digitalRead(trigger);
+  potread = map(analogRead(POT),0,4095,1000,3000);//read POT value and map it between 3000 and 1000
+  servopotread = map(analogRead(SERVOPOT),0,4095,5000,4000);//read servopot value and map it between 4095-5000
+  Serial.println(servopotread); 
+int  buttonRead = digitalRead(trigger);
   sendPacket();//Run the subroutine to send out packet
   }
 
@@ -102,9 +103,9 @@ void sendPacket() {
   udpBuffer[1] = potread >> 8; // send MSB for first integer
   udpBuffer[2] = servopotread  & 0xff;//send LSB for first integer
   udpBuffer[3] = servopotread >> 8;//send MSB for second integer
-  udpBuffer[4] = buttonRead & 0xff; // send LSB for first integer
-  udpBuffer[5] = buttonRead >> 8; // send MSB for first integer
-  udpBuffer[6] = 0; // null terminate
+  // udpBuffer[4] = buttonRead & 0xff; // send LSB for first integer
+  // udpBuffer[5] = buttonRead >> 8; // send MSB for first integer
+  udpBuffer[4] = 0; // null terminate
 
   udp.beginPacket(ipTarget, targetPort);  // send to car port
   udp.printf("%s", udpBuffer);//Send the message

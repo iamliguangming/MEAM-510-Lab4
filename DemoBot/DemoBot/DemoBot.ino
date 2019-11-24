@@ -50,7 +50,7 @@ const int N_A1 = 19;//4A used to control the NOT direction on H bridge
 const int Enable = 4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
-const int PhotoDiode = 27;
+const int PhotoDiode = 27;//Pin saved for communication with Photodiode
 
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
@@ -60,6 +60,7 @@ int servoread = 0;//A value used to store servo receving value
 void receivePacket();//function prototype for receiving packet
 int MessageReceived = 0;//declare the messagereceived integer
 const char* ssid = "SmartGuangming";//initialize WiFi name
+const int onboardLED = 2;
 WiFiUDP  UDPTestServer;//Setup UDP protocal
 IPAddress myIPaddress(192,168,1,142);//Declare my own IP address
 const int UDP_PACKET_SIZE = 100;//declare the packet size to be 100
@@ -507,6 +508,8 @@ void setup()
   Serial.println();   //Printing information regarding to connection
   Serial.print("Connecting to");
   Serial.println(ssid);
+  pinMode(onboardLED,OUTPUT);
+
   WiFi.mode(WIFI_STA);//Set WiFi mode to station
   WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
   //Set up IP address, GateWay and Mask
@@ -523,7 +526,7 @@ void setup()
     Serial.print(".");//print a dot while waiting
   }
   Serial.println("WiFi Connected ");//Print WiFi is connected when it is connected
-
+  digitalWrite(onboardLED,HIGH);
   /* The following lines turns the WiFi mode into AP mode */
   // WiFi.mode(WIFI_AP);
   // WiFi.softAP(ssid);
@@ -543,6 +546,7 @@ void setup()
   // pinMode(EnableControl,INPUT);
   pinMode(ServoControl,OUTPUT);//Set ServoControl as output
   pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
+
   attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
 }
 // =====================================================================
@@ -597,21 +601,23 @@ void loop()
     // ========================= LED start =============================
     ShowRobotNum();         // set the LEDs for the robot number
     ShowHealth(health);     // set the LEDs for the health
-
-    if (health == 0)
-    {
-        clearLEDs();
-        first=1;
-        ShowRespawnTimer(respawnTimer);
-    }
-
-    FastLEDshowESP32();
     // ========================== LED end ==============================
     // ========================== WiFi Control start ==============================
     receivePacket();//run the receive packet subroutine
     int psudoduty = val -2000;//remap the DC PWM received -> -1000 to 1000
     Serial.println(psudoduty);//Print out the received value (for debugging)
     uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
+    uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+    if (health == 0)
+    {
+        clearLEDs();
+        first=1;
+        ShowRespawnTimer(respawnTimer);
+        duty = 0;
+        servoduty =0;
+    }
+     FastLEDshowESP32();
+
 
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
     if ((psudoduty) >= 0){
@@ -630,7 +636,6 @@ void loop()
 
     ledcWrite(LEDC_CHANNEL,duty);//Run the motors at given duty cycle to control there speed
     ledcWrite(LEDC_CHANNEL1,duty);//Run the motors at given duty cycle to control there speed
-      uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
       Serial.println("Servo duty");
       Serial.println(map(servoread,4000,5000,450,1050));//Print out the servo duty(For debugging)
       ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
