@@ -8,6 +8,7 @@ Note that the controller is in AP which can be accessed by the running car*/
 const int POT = 32; // Setting up the pin to control remote DC motors
 const int SERVOPOT = 33;//Setting up the pot to control remote servo motor
 void sendPacket();//Function prototye to send integer package
+int buttonRead;
 
 int potread; // initializing the reading from the pot that has been mapped
 int cb = 0; // the size of the packet received. 0 if no packet received
@@ -72,8 +73,10 @@ void setup() {
 void loop() {//a loop runs forever
   potread = map(analogRead(POT),0,4095,1000,3000);//read POT value and map it between 3000 and 1000
   servopotread = map(analogRead(SERVOPOT),0,4095,4951,4000);//read servopot value and map it between 4095-5000
-  Serial.println(servopotread); 
-int  buttonRead = digitalRead(trigger);
+  Serial.println(servopotread);
+  buttonRead = digitalRead(trigger)*1000;
+  Serial.println("ButtonRead");
+  Serial.println(buttonRead);
   sendPacket();//Run the subroutine to send out packet
   }
 
@@ -103,9 +106,11 @@ void sendPacket() {
   udpBuffer[1] = potread >> 8; // send MSB for first integer
   udpBuffer[2] = servopotread  & 0xff;//send LSB for first integer
   udpBuffer[3] = servopotread >> 8;//send MSB for second integer
+  udpBuffer[4] = buttonRead & 0xff;
+  udpBuffer[5] = buttonRead >> 8;
   // udpBuffer[4] = buttonRead & 0xff; // send LSB for first integer
   // udpBuffer[5] = buttonRead >> 8; // send MSB for first integer
-  udpBuffer[4] = 0; // null terminate
+  udpBuffer[6] = 0; // null terminate
 
   udp.beginPacket(ipTarget, targetPort);  // send to car port
   udp.printf("%s", udpBuffer);//Send the message
