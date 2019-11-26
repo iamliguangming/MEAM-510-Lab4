@@ -71,7 +71,7 @@ void setup() {
 
 void loop() {//a loop runs forever
   potread = map(analogRead(POT),0,4095,1000,3000);//read POT value and map it between 3000 and 1000
-  servopotread = map(analogRead(SERVOPOT),0,4095,5000,4000);//read servopot value and map it between 4095-5000
+  servopotread = map(analogRead(SERVOPOT),0,4095,4951,4000);//read servopot value and map it between 4095-5000
   Serial.println(servopotread); 
 int  buttonRead = digitalRead(trigger);
   sendPacket();//Run the subroutine to send out packet
