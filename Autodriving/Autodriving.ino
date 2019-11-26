@@ -28,6 +28,7 @@ int fieldBoundryXNeg = 0;
 int fieldBoundryYNeg = 0;
 int
 
+void
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 
@@ -61,28 +62,36 @@ void loop() {
   // put your main code here, to run repeatedly:
   uint_32 halfduty = 127;
   uint_32 fullduty = 255;
+  uint_32 servoLeft = 450*LEDC_RESOLUTION/10000;
+  uint_32 servoRight = 1050*LEDC_RESOLUTION/10000;
+  uint_32 servoCenter = 750*LEDC_RESOLUTION/10000;
   while(HeadX<BoundryFourX && tailX<BoundryFourX && HeadY < BoundryFourY && tailY < BoundryFourY )
   {
-    while (Direction!=0)
-    if (DirectionX > 0)
+    while (Direction!=0)//while the head is not in line with horizontal
     {
-      if (DirectionY>0)
+      if (DirectionX > 0)
       {
+        if (DirectionY>0)
+        {
 
-        digitalWrite(A1,HIGH);
-        digitalWrite(N_A1,LOW);
-        ledcWrite(LEDC_CHANNEL,halfduty);
-        ledcWrite(LEDC_CHANNEL_SERVO,fullduty);
-      }
-      else if (DirectionY < 0)
-      {
-        digitalWrite(A1,HIGH);
-        digitalWrite(N_A1,LOW);
-        ledcWrite(LEDC_CHANNEL,halfduty);
-        ledcWrite(LEDC_CHANNEL_SERVO,0);
-      }
+          digitalWrite(A1,HIGH);
+          digitalWrite(N_A1,LOW);
+          ledcWrite(LEDC_CHANNEL,halfduty);
+          ledcWrite(LEDC_CHANNEL_SERVO,servoRight);
+        }
+        else if (DirectionY < 0)
+        {
+          digitalWrite(A1,HIGH);
+          digitalWrite(N_A1,LOW);
+          ledcWrite(LEDC_CHANNEL,halfduty);
+          ledcWrite(LEDC_CHANNEL_SERVO,servoLeft);
+        }
 
+      }
     }
+    ledcWrite(LEDC_CHANNEL,fullduty);
+    ledcWrite(LEDC_CHANNEL_SERVO,halfduty)
+
   }
 
   //If the car is in region 6
