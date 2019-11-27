@@ -1,11 +1,20 @@
 #define RXD2 16
 #define TXD2 17
+
+const int UARTBUFFERSIZE = 100;
+char UARTBUFFER[UARTBUFFERSIZE];
+int HeadX;
+int HeadY;
+int TailX;
+int TailY;
+void sendPacket();
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial2.begin(115200,SERIAL_8N1,RXD2,TXD2);
 
 }
+
 int i;
 void loop() {
   while (Seiral2.available())
@@ -19,5 +28,10 @@ void loop() {
     Serial.printf("ESP32 Write %d\n",i);
     delay(1);
   }
+
+}
+
+void sendPacket()
+{
 
 }
