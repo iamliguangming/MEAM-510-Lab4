@@ -41,6 +41,7 @@
 const int LEDC_CHANNEL = 0;//interrupt channel 0
 const int LEDC_CHANNEL1 = 1;//interrupt channel 1
 const int LEDC_CHANNEL_SERVO = 2;//interrupt channel 2
+const int LEDC_CHANNEL_WEAPON = 3;
 const int LEDC_RESOLUTION_BITS=13;//bits of resolution is 13
 const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
 const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
@@ -51,12 +52,14 @@ const int Enable = 4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;//Pin saved for communication with Photodiode
+const int Weaponcontrol = 9;
 
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
 int cb = 0;//A flag used to tell if a package is received
 int val = 0;//A value used to store analogread value
 int servoread = 0;//A value used to store servo receving value
+int weaponread = 0;
 void receivePacket();//function prototype for receiving packet
 int MessageReceived = 0;//declare the messagereceived integer
 const char* ssid = "SmartGuangming";//initialize WiFi name
@@ -538,14 +541,17 @@ void setup()
   ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC channel 0 at 5000HZ, 2^13 resolution
   ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC Channel 1 at 5000Hz, 2^13 resolution
   ledcSetup(LEDC_CHANNEL_SERVO,LEDC_FREQ_HZ_SERVO,LEDC_RESOLUTION_BITS);//Setup LEDC Channel 2 at 50Hz, 2^13 resolution
+  ledcSetup(LEDC_CHANNEL_WEAPON,LEDC_CHANNEL_WEAPON,LEDC_RESOLUTION_BITS);
   ledcAttachPin(Enable,LEDC_CHANNEL);//Attach ledc at LEDC_CHANNEL to PWM1
   ledcAttachPin(Enable1,LEDC_CHANNEL1);//Attch ledc at LEDC_CHANNEL_1 to PWM2
   ledcAttachPin(ServoControl,LEDC_CHANNEL_SERVO);//Attach ledc at LEDC_CHANNEL_SERVO to servo control pin
+  ledcAttachPin(Weaponcontrol,LEDC_CHANNEL_WEAPON);
   pinMode(A1,OUTPUT);//Set 1A as output
   pinMode(N_A1,OUTPUT);//Set 4A as output
   // pinMode(EnableControl,INPUT);
   pinMode(ServoControl,OUTPUT);//Set ServoControl as output
   pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
+  pinMode(Weaponcontrol,OUTPUT);
 
   attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
 }
@@ -596,6 +602,10 @@ void loop()
             respawnTimer = data_rd[2];
         }
     }
+    while (WiFi.status()!=WL_CONNECTED)
+    {
+      WiFi.begin(ssid);//Begin WiFi connection at selected WiFi name
+    }
     // ========================== I2C end ==============================
 
     // ========================= LED start =============================
@@ -608,6 +618,14 @@ void loop()
     Serial.println(psudoduty);//Print out the received value (for debugging)
     uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+    if (weaponread)
+    {
+      uint32_t weaponduty = 450*LEDC_RESOLUTION/10000;
+    }
+    else
+    {
+      uint32_t weaponduty = 1050*LEDC_RESOLUTION/10000;
+    }
     if (health == 0)
     {
         clearLEDs();
@@ -638,7 +656,9 @@ void loop()
     ledcWrite(LEDC_CHANNEL1,duty);//Run the motors at given duty cycle to control there speed
       Serial.println("Servo duty");
       Serial.println(map(servoread,4000,5000,450,1050));//Print out the servo duty(For debugging)
-      ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
+    ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
+    ledcWrite(LEDC_CHANNEL_WEAPON,weaponduty);
+
     cb = 0;//Set the receive pack back to 0
     // ========================== WiFi Control end ==============================
 
@@ -650,7 +670,7 @@ void receivePacket(){
     UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);//Read packetbuffer with UDP_PACKET_SIZE from the UDP packet received
     val = (packetBuffer[1]<<8 |packetBuffer[0]);//Save the first two bytes of the packet received as the PWM for DC motors
     servoread = (packetBuffer[3]<<8|packetBuffer[2]);//Save the second two bytes of the packet received as the PWM for servo motors
-
+    weaponread = (packetBuffer[5]<<8|packetBuffer[4]);
   }
 }
 // =====================================================================

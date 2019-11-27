@@ -1,4 +1,4 @@
-const int servopot=32;
+const int servobutton = 0;
 const int servomotor= 18;
 const int LEDC_CHANNEL = 1;
 const int LEDC_RESOLUTION_BITS=13;//bits of resolution is 13
@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(115200);
   ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC channel 0 at 5000HZ, 2^13 resolution
   ledcAttachPin(servomotor,LEDC_CHANNEL);//Attach ledc at LEDC_CHANNEL_SERVO to servo control pin
-  pinMode(servopot,INPUT);
+  pinMode(servobutton,INPUT);
 }
 
 void loop() {
