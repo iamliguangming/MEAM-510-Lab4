@@ -60,6 +60,7 @@ int cb = 0;//A flag used to tell if a package is received
 int val = 0;//A value used to store analogread value
 int servoread = 0;//A value used to store servo receving value
 int weaponread = 0;
+uint32_t weaponduty;
 void receivePacket();//function prototype for receiving packet
 int MessageReceived = 0;//declare the messagereceived integer
 const char* ssid = "SmartGuangming";//initialize WiFi name
@@ -620,11 +621,11 @@ void loop()
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
     if (weaponread)
     {
-      uint32_t weaponduty = 450*LEDC_RESOLUTION/10000;
+       weaponduty = 450*LEDC_RESOLUTION/10000;
     }
     else
     {
-      uint32_t weaponduty = 1050*LEDC_RESOLUTION/10000;
+       weaponduty = 1050*LEDC_RESOLUTION/10000;
     }
     if (health == 0)
     {
