@@ -635,7 +635,7 @@ void loop()
         ShowRespawnTimer(respawnTimer);
         duty = 0;
         servoduty =0;
-        weaponduty = 0;
+        weaponduty = 750*LEDC_RESOLUTION/10000;
     }
      FastLEDshowESP32();
 
