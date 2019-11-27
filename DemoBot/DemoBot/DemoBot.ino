@@ -542,7 +542,7 @@ void setup()
   ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC channel 0 at 5000HZ, 2^13 resolution
   ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC Channel 1 at 5000Hz, 2^13 resolution
   ledcSetup(LEDC_CHANNEL_SERVO,LEDC_FREQ_HZ_SERVO,LEDC_RESOLUTION_BITS);//Setup LEDC Channel 2 at 50Hz, 2^13 resolution
-  ledcSetup(LEDC_CHANNEL_WEAPON,LEDC_CHANNEL_WEAPON,LEDC_RESOLUTION_BITS);
+  ledcSetup(LEDC_CHANNEL_WEAPON,LEDC_FREQ_HZ_SERVO,LEDC_RESOLUTION_BITS);
   ledcAttachPin(Enable,LEDC_CHANNEL);//Attach ledc at LEDC_CHANNEL to PWM1
   ledcAttachPin(Enable1,LEDC_CHANNEL1);//Attch ledc at LEDC_CHANNEL_1 to PWM2
   ledcAttachPin(ServoControl,LEDC_CHANNEL_SERVO);//Attach ledc at LEDC_CHANNEL_SERVO to servo control pin
@@ -616,14 +616,15 @@ void loop()
     // ========================== WiFi Control start ==============================
     receivePacket();//run the receive packet subroutine
     int psudoduty = val -2000;//remap the DC PWM received -> -1000 to 1000
-    Serial.println(psudoduty);//Print out the received value (for debugging)
+    Serial.println("WeaponRead");
+    Serial.println(weaponread);//Print out the received value (for debugging)
     uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
-    if (weaponread)
+    if (weaponread == 1000)
     {
        weaponduty = 450*LEDC_RESOLUTION/10000;
     }
-    else
+    else if(weaponread ==2000)
     {
        weaponduty = 1050*LEDC_RESOLUTION/10000;
     }
@@ -634,6 +635,7 @@ void loop()
         ShowRespawnTimer(respawnTimer);
         duty = 0;
         servoduty =0;
+        weaponduty = 0;
     }
      FastLEDshowESP32();
 

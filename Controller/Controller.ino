@@ -74,7 +74,7 @@ void loop() {//a loop runs forever
   potread = map(analogRead(POT),0,4095,1000,3000);//read POT value and map it between 3000 and 1000
   servopotread = map(analogRead(SERVOPOT),0,4095,4951,4000);//read servopot value and map it between 4095-5000
   Serial.println(servopotread);
-  buttonRead = digitalRead(trigger)*1000;
+  buttonRead = digitalRead(trigger)*1000+1000;
   Serial.println("ButtonRead");
   Serial.println(buttonRead);
   sendPacket();//Run the subroutine to send out packet
@@ -108,8 +108,8 @@ void sendPacket() {
   udpBuffer[3] = servopotread >> 8;//send MSB for second integer
   udpBuffer[4] = buttonRead & 0xff;
   udpBuffer[5] = buttonRead >> 8;
-  // udpBuffer[4] = buttonRead & 0xff; // send LSB for first integer
-  // udpBuffer[5] = buttonRead >> 8; // send MSB for first integer
+//   udpBuffer[4] = buttonRead & 0xff; // send LSB for first integer
+//   udpBuffer[5] = buttonRead >> 8; // send MSB for first integer
   udpBuffer[6] = 0; // null terminate
 
   udp.beginPacket(ipTarget, targetPort);  // send to car port
