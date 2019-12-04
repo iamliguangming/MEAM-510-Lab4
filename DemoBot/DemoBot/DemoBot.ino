@@ -579,6 +579,8 @@ void loop()
 
     static int respawnTimer;        // amount of time remaining on respawn
 
+
+
     if (readI2C)
     {
         readI2C = 0;                // set readI2C to be false
@@ -633,13 +635,16 @@ void loop()
         clearLEDs();
         first=1;
         ShowRespawnTimer(respawnTimer);
-        duty = 0;
-        servoduty =0;
-        weaponduty = 750*LEDC_RESOLUTION/10000;
+
     }
      FastLEDshowESP32();
 
-
+    if (health ==0 || gameStatus == 0 || autoMode ==1)
+    {
+      duty = 0;
+      servoduty =0;
+      weaponduty = 750*LEDC_RESOLUTION/10000;
+    }
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
     if ((psudoduty) >= 0){
     digitalWrite(A1,HIGH);
