@@ -622,6 +622,7 @@ void loop()
     Serial.println(weaponread);//Print out the received value (for debugging)
     uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+
     if (weaponread == 1000)
     {
        weaponduty = 450*LEDC_RESOLUTION/10000;
@@ -638,6 +639,10 @@ void loop()
 
     }
      FastLEDshowESP32();
+    if ((servoread <= 4200 || servoread >= 4800) && psudoduty < 0)
+    {
+      duty = LEDC_RESOLUTION*850/1000;
+    }
 
     if (health ==0 || gameStatus == 0 || autoMode ==1)
     {
