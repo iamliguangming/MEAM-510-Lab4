@@ -249,15 +249,15 @@ void IRAM_ATTR calcT(){ // interrupt function
     timediff = currT - prevT; // calculate time of the pulse width
     if(timediff < 60){ // if the width is less than 60, which is less than the pulse width of the sync pulse, but larger than the x/y pulses
       if(flagx){ // if the x flag is on
-        Serial.print("x-pulse: "); // print out the pulse value
-        Serial.println(timediff);
+        // Serial.print("x-pulse: "); // print out the pulse value
+        // Serial.println(timediff);
         delayMicroseconds(1);
         flagx = 0; // set the flag to 0 so that we dont read the next pulse as x
         flagy = 1; // turn this flag on to read the next pulse as y
       }
       else if(flagy){ // if x flag isnt on but y flag is on
-        Serial.print("  y-pulse: "); // print out the pulse value
-        Serial.println(timediff);
+        // Serial.print("  y-pulse: "); // print out the pulse value
+        // Serial.println(timediff);
         delayMicroseconds(1);
 //        flagx = 1;
         flagy = 0; // reset the flag back to 0. At this point, both the x and y flags are off.
@@ -283,13 +283,14 @@ void IRAM_ATTR calcT(){ // interrupt function
     timediff = currT - start; //calculate the time difference
     if(counter == 1 && (flagx || flagy)){ // checks whether the counter is 1 and if either flag is on. The counter is always on before the x and y pulses, as well as after the y pulse; however, we prevent the issue of counting the sync pulse after the y pulse by checking the flags, which are both 0 after the y pulse.
       if(flagx){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
-        Serial.print("    x time:"); // print the x time distance
-        Serial.println(timediff);
+        // Serial.print("    x time:"); // print the x time distance
+        // Serial.println(timediff);
+        digitalWrite(onboardLED,HIGH);
         delayMicroseconds(1);
       }
       else{ // on y pulse
-        Serial.print("      y time:"); // print the y time distance
-        Serial.println(timediff);
+        // Serial.print("      y time:"); // print the y time distance
+        // Serial.println(timediff);
         delayMicroseconds(1);
       }
     }
@@ -525,7 +526,7 @@ void setup()
     Serial.print(".");//print a dot while waiting
   }
   Serial.println("WiFi Connected ");//Print WiFi is connected when it is connected
-  digitalWrite(onboardLED,HIGH);
+  // digitalWrite(onboardLED,HIGH);
   /* The following lines turns the WiFi mode into AP mode */
   // WiFi.mode(WIFI_AP);
   // WiFi.softAP(ssid);
@@ -644,15 +645,15 @@ void loop()
       servoduty =0;
       weaponduty = 750*LEDC_RESOLUTION/10000;
     }
-    if (autoMode == 1 && gameStatus == 1)
-    {
-      attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
-    }
-
-    if (autoMode == 0)
-    {
-      detachInterrupt(digitalPinToInterrupt(PhotoDiode));
-    }
+    // if (autoMode == 1 && gameStatus == 1)
+    // {
+    //   attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
+    // }
+    //
+    // if (autoMode == 0)
+    // {
+    //   detachInterrupt(digitalPinToInterrupt(PhotoDiode));
+    // }
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
     if ((psudoduty) >= 0){
     digitalWrite(A1,HIGH);
