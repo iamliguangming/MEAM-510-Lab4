@@ -11,6 +11,7 @@ i2s_config_t i2s_config = {
   .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
   .sample_rate = 16000,
   .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+  .channel = 1,
   .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
   .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
   .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, // high interrupt priority
@@ -41,7 +42,6 @@ void playPROGMEMsample(const uint8_t* audioSample) {
   i2s_set_pin((i2s_port_t)i2s_num, &pin_config);
   //set sample rates of i2s to sample rate of wav file
   i2s_set_sample_rates((i2s_port_t)i2s_num, 16000);
-
 
   uint32_t readData;
 
