@@ -14,21 +14,37 @@ const int N_A1 =22;//4A used to control the NOT direction on H bridge
 const int Enable=4;//Enable pin used to control the PWM on H bridge 1
 const int ServoControl = 33;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;
+uint32_t ServoAngleDuty;
 //--------------------------------------------------------------------------------------
 //The following are the constants used for the VIVE sensing
 int HeadX = 0;
 int HeadY = 0;
 int tailX = 0;
 int tailY = 0;
-int DirectionX = HeadX-TailX;
-int DirectionY = HeadY-TailY;
-int fieldBoundryXPos = 0;
-int fieldBoundryYPos = 0;
-int fieldBoundryXNeg = 0;
-int fieldBoundryYNeg = 0;
-int
+float DirectionX = HeadX-TailX;
+float DirectionY = HeadY-TailY;
+float NormalX = DirectionX / sqrt(DirectionX ^ 2 + DirectionY ^ 2);
+float NormalY = DirectionY / sqrt(DirectionX ^ 2 + DirectionY ^ 2)
+int regionOneLeft;
+int regionOneRight;
+int regionOneTop;
+int regionOneBot;
+int regionTwoLeft;
+int regionTwoRight;
+int regionTwoTop;
+int regionTwoBot;
+int regionThreeLeft;
+int regionThreeRight;
+int regionThreeTop;
+int regionThreeBot;
+int regionFourLeft;
+int regionFourRight;
+int regionFourTop;
+int regionFourBot;
 
-void
+void GoStraight(int Xway, int Yway, float NormalX, float NormalY);
+void TurnLeft();
+void TurnRight();
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 
@@ -130,4 +146,40 @@ void receivePacket(){
     servoread = (packetBuffer[3]<<8|packetBuffer[2]);//Save the second two bytes of the packet received as the PWM for servo motors
 
   }
+}
+
+void GoStraight(int Xway, int Yway, float NormalX, float NormalY)
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  ledcWrite(LEDC_CHANNEL,fullduty);
+   if (Xway == 1 && Yway == 0 )
+   {
+    ServoAngleDuty = map((NormalY-Yway)*1000,-1000,1000,450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
+   }
+   else if (Xway == -1 && Yway == 0)
+  {
+    ServoAngleDuty = map ((NormalY - Yway)*1000,1000,-1000,450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
+  }
+  else if (Xway == 0 && Yway == 1 )
+  {
+    ServoAngleDuty = map((NormalX - Xway) * 1000,-1000,1000, 450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
+  }
+  else if (Xway == 0 && Yway == -1)
+  {
+    ServoAngleDuty = map((NormalX - Xway) * 1000, 1000,-1000, 450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
+  }
+  ledcWrite(LEDC_CHANNEL_SERVO,ServoAngleDuty);
+}
+
+void TurnLeft()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  ledcWrite(LEDC_CHANNEL,halfduty);
+  ledcWrite(LEDC_CHANNEL,servoLeft);
+}
+void TurnRight()
+{
+  digitalWrite(A1,HI)
 }
