@@ -74,14 +74,14 @@ IPAddress ipTarget(192,168,1,125);//declare the ipaddress sending packet to
 
 //--------------------------------------------------------------------------------------
 //The following are the constants used for the VIVE sensing
-int prevT =0;
-int currT = 0;
-int flagx = 1;
-int flagy = 0;
-int start = 0 ;
-int counter = 0;
-int timediff = 0;
-int endofAuto = 1;
+volatile int prevT =0;
+volatile int currT = 0;
+volatile int flagx = 1;
+volatile int flagy = 0;
+volatile int start = 0 ;
+volatile int counter = 0;
+volatile int timediff = 0;
+volatile int endofAuto = 1;
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 
@@ -519,11 +519,6 @@ void setup()
   //Set up IP address, GateWay and Mask
   WiFi.begin(ssid);//Begin WiFi connection at selected WiFi name
   WiFi.setSleep(false);//Set mode of WiFi to let it never sleep
-  if (endofAuto == 0)
-  {
-    detachInterrupt(digitalPinToInterrupt(PhotoDiode));
-
-  }
   while (WiFi.status()!=WL_CONNECTED);//A loop runs until WiFi is connected
   {
     delay(500);//wait for 0.5 seconds
@@ -554,7 +549,7 @@ void setup()
   pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
   pinMode(Weaponcontrol,OUTPUT);
 
-  attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
+
 }
 // =====================================================================
 // ========================== END OF SETUP =============================
@@ -578,7 +573,6 @@ void loop()
     static int health;              // robot's health
 
     static int respawnTimer;        // amount of time remaining on respawn
-
 
 
     if (readI2C)
@@ -623,11 +617,11 @@ void loop()
     uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
     uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
 
-    if (weaponread == 1000)
+    if (weaponread == 2000)
     {
        weaponduty = 450*LEDC_RESOLUTION/10000;
     }
-    else if(weaponread ==2000)
+    else if(weaponread ==1000)
     {
        weaponduty = 1050*LEDC_RESOLUTION/10000;
     }
@@ -649,6 +643,15 @@ void loop()
       duty = 0;
       servoduty =0;
       weaponduty = 750*LEDC_RESOLUTION/10000;
+    }
+    if (autoMode == 1 && gameStatus == 1)
+    {
+      attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
+    }
+
+    if (autoMode == 0)
+    {
+      detachInterrupt(digitalPinToInterrupt(PhotoDiode));
     }
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
     if ((psudoduty) >= 0){
