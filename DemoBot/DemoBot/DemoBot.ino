@@ -53,10 +53,14 @@ const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;//Pin saved for communication with Photodiode
 const int Weaponcontrol = 9;
-const int autoModeTransfer = 36;
+const int autoModeTransfer = 35;
 const int statePin1 = 39;
 const int statePin2 = 34;
 
+
+void TurnLeft();
+void TurnRight();
+void GoStraight();
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
 int cb = 0;//A flag used to tell if a package is received
@@ -490,6 +494,9 @@ void setup()
   pinMode(ServoControl,OUTPUT);//Set ServoControl as output
   pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
   pinMode(Weaponcontrol,OUTPUT);
+  pinMode(statePin1,INPUT);
+  pinMode(statePin2,INPUT);
+  pinMode(autoModeTransfer,OUTPUT);
 
 
 }
@@ -588,6 +595,11 @@ void loop()
     }
     if (autoMode == 1 && gameStatus == 1)
     {
+      digitalWrite(autoModeTransfer,HIGH);
+      if (digitalRead(statePin1) && (!digitalRead(statePin2)))
+      {
+        TurnLeft();
+      }
 
     }
 
@@ -650,7 +662,7 @@ void TurnRight()
 void GoStraight()
 {
   digitalWrite(A1,HIGH);
-  digitalWrite(A2,LOW);
+  digitalWrite(N_A1,LOW);
   ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
   ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
 }
