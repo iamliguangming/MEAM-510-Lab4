@@ -194,7 +194,7 @@ void loop() {
     yBack= 0;
   }
 
-if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
+if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
 {
   Serial.print("xFront: ");
   Serial.println(xFront);
@@ -206,8 +206,8 @@ if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
   Serial.println(yBack);
   DirectionX = xFront - xBack;
   DirectionY = yFront - yBack;
-  float NormalX = DirectionX / sqrt(DirectionX * DirectionX + DirectionY * DirectionY);
-  float NormalY = DirectionY / sqrt(DirectionX * DirectionX + DirectionY * DirectionY);
+  float NormalX = DirectionX / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
+  float NormalY = DirectionY / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
   Serial.print("NormalX");
   Serial.println(NormalX);
   Serial.print("NormalY");
@@ -215,136 +215,117 @@ if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
 //  GoStraight();
 
   int initialYPos = 0;
-  int err = 0.05;
+  float err = 0.05;
   if(flagYback){
     initialYPos = yBack; 
     flagYback = 0;   
   }
-  int bufferDistance = 300; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
-  if(steps == 1){
-//    if(NormalY <= -err){ // if facing right
-      if(abs(1+NormalX) <= err){ // until I face North
-        TurnLeft();
-        turned = 1;
-      }
-      else{
+  int bufferDistanceL = 500; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
+  int bufferDistanceR = 650;
+
+  if(yFront>=yfinal){ // im on the left side
+    if(steps == 1){
         steps = 2;
-      }
-//    }
-//    else if(abs(1-NormalX) <= err){
-//      GoStraight();
-//    }
-  }
-  else if(steps == 2){
-    if(turned == 1){
-      if(1-NormalY >= err && (abs(yFront - initialYPos) >= 50)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
-        TurnLeft();
-      }
-      else{
-        turned = 2;
-        steps = 0;
+    }
+    else if(steps == 2){
+  
+        if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
+          GoStraight();
+        }
+        else{
+          
+          StopIt();
+          steps = 3;
+        }
+    }
+    else if(steps == 3 || turned == 2){
+      if(steps == 3){
+        if(NormalY + 1.00 >= 0.25*err){
+          TurnRight();
+        }
+        else{
+          Serial.println("      I turn");
+          StopIt();
+          steps = 4;
+        }
       }
     }
-    else{
-      if(abs(xfinal - xFront) >= bufferDistance){ // input around 1 foot here. This is the radius of curvature
-        GoStraight();
-      }
-      else{
-        steps = 3;
-//        turned = 0;
-      }
-    }
-  }
-  else if(steps == 3 || turned == 2){
-    if(steps == 3){
-      if(NormalY + 1 >= err){
-        TurnRight();
-      }
-      else{
-        steps = 4;
+    else if( steps ==4 || turned == 3){
+      if(steps == 4){
+        if(abs(yFront - yfinal) >= bufferDistanceL){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
+          GoStraight();
+        }
+        else{
+          Serial.println("      I go straight");
+          StopIt();
+          steps = 5;
+        }
       }
     }
-    if(turned == 2){
-      if(1 + NormalX >= err){
-        TurnRight();
-      }
-      else{
-        turned = 3;
-      }
-    }
-  }
-  else if( steps ==4 || turned == 3){
-    if(steps == 4){
-      if(abs(yFront - yfinal) >= bufferDistance){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
-        GoStraight();
-      }
-      else{
-        steps = 5;
-      }
-    }
-    if(turned == 3){
-      if(abs(xfinal - xFront) >= bufferDistance){ // input around 1 foot here. This is the radius of curvature
-        GoStraight();
-      }
-      else{
-        turned = 4;
-      }
-    } 
-  }
-  else if(steps == 5 || turned == 4){
-    if(steps == 5){
-      if(1+NormalX >= err){
-        TurnLeft();
-      }
-    }
-    else{
-      steps = 6;
-    }
-    if(turned == 4){
-      if(NormalY + 1 >= err){
-        TurnRight();
-      }
-      else{
-        turned = 5;
-      }
-    }
-  }
-  else if(steps == 6 || turned == 5){
-    if(steps == 6){
-      GoStraight();
-    }
-    if(turned ==5){
-      if(abs(yFront - yfinal) >= bufferDistance){// may need a different buffer Distance !!!!!!!!!!!!!!!
-        GoStraight();
-      }
-      else{
-        turned = 6;
-      }
-    }
-  }
-  else if(turned == 6){
-    if(1-NormalX >= err){
-        TurnLeft();
-    }
-    else{
-      turned = 7;
-    }
+  //  else if(steps == 5 || turned == 4){
+  //    if(steps == 5){
+  //      if(1+NormalX >= err){
+  //        TurnLeft();
+  //      }
+  //    }
+  //    else{
+  //      steps = 6;
+  //    }
+  ////    if(turned == 4){
+  ////      if(NormalY + 1 >= err){
+  ////        TurnRight();
+  ////      }
+  ////      else{
+  ////        turned = 5;
+  ////      }
+  ////    }
+  //  }
+  //  else if(steps == 6 || turned == 5){
+  //    if(steps == 6){
+  //      GoStraight();
+  //    }
   }
   else{
-    GoStraight();
-  }
-//
-
+    if(steps == 1){
+        steps = 2;
+    }
+    else if(steps == 2){
   
-//  if(NormalX >= err){
-//    GoStraight();
-//  }
-//  TurnLeft();
-}
-//xFront = 10;
-//yFront = 10;
-//xBack = 10;
-//yBack = 10;
+        if(abs(xfinal - xFront) >= bufferDistanceR){ // input around 1 foot here. This is the radius of curvature
+          GoStraight();
+        }
+        else{
+          
+          StopIt();
+          steps = 3;
+        }
+    }
+    else if(steps == 3 ){
+      if(steps == 3){
+        if( 1.00 - NormalY >= 0.25*err){
+          TurnLeft();
+        }
+        else{
+          Serial.println("      I turn");
+          StopIt();
+          steps = 4;
+        }
+      }
+    }
+    else if( steps ==4 || turned == 3){
+      if(steps == 4){
+        if(abs(yFront - yfinal) >= bufferDistanceR){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
+          GoStraight();
+        }
+        else{
+          Serial.println("      I go straight");
+          StopIt();
+          steps = 5;
+        }
+      }
+    }
+  }
+  }
 }
 
 //void clearSyncPulse(int SignalCleared)
