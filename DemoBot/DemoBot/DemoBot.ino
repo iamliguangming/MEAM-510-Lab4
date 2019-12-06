@@ -61,6 +61,7 @@ const int statePin2 = 34;
 void TurnLeft();
 void TurnRight();
 void GoStraight();
+void StopIt();
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
 int cb = 0;//A flag used to tell if a package is received
@@ -598,7 +599,15 @@ void loop()
       digitalWrite(autoModeTransfer,HIGH);
       if (digitalRead(statePin1) && (!digitalRead(statePin2)))
       {
+        TurnRight();
+      }
+      if(!digitalRead(statePin1) && digitalRead(statePin2))
+      {
         TurnLeft();
+      }
+      if(digitalRead(statePin1) && digitalRead(statePin2))
+      {
+        GoStraight();
       }
 
     }
@@ -665,4 +674,10 @@ void GoStraight()
   digitalWrite(N_A1,LOW);
   ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
   ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
+}
+void StopIt()
+{
+  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
+  ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
+  ledcWrite(LEDC_CHANNEL_WEAPON,750*LEDC_RESOLUTION/10000);
 }

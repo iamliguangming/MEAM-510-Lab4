@@ -1,4 +1,4 @@
-#define diode 33 // output from the circuit
+#define diode 34// output from the circuit
 #define diode2 35 //
 
 #define autoMode 4
@@ -34,7 +34,7 @@ int yFront = 0;
 int xBack =0;
 int yBack = 0;
 
-void GoStraight(int XWay, int Yway, int NormalX, int NormalY);
+void GoStraight();
 void clearSyncPulse(int SignalCleared);
 void TurnRight();
 void TurnLeft();
@@ -179,8 +179,8 @@ if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
   Serial.println(yFront);
   Serial.print("xBack: ");
   Serial.println(xBack);
-  Serial.print("xBack ");
-  Serial.println(xBack);
+  Serial.print("yBack ");
+  Serial.println(yBack);
   DirectionX = xFront - xBack;
   DirectionY = yFront - yBack;
   float NormalX = DirectionX / sqrt(DirectionX * DirectionX + DirectionY * DirectionY);
@@ -244,4 +244,10 @@ void StopIt()
 {
   digitalWrite(statePin1,LOW);
   digitalWrite(statePin2,LOW);
+}
+
+void GoStraight()
+{
+  digitalWrite(statePin1,HIGH);
+  digitalWrite(statePin2,HIGH);
 }
