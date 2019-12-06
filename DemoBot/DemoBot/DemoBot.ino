@@ -53,6 +53,9 @@ const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;//Pin saved for communication with Photodiode
 const int Weaponcontrol = 9;
+const int autoModeTransfer = 36;
+const int statePin1 = 39;
+const int statePin2 = 34;
 
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
@@ -74,14 +77,6 @@ IPAddress ipTarget(192,168,1,125);//declare the ipaddress sending packet to
 
 //--------------------------------------------------------------------------------------
 //The following are the constants used for the VIVE sensing
-volatile int prevT =0;
-volatile int currT = 0;
-volatile int flagx = 1;
-volatile int flagy = 0;
-volatile int start = 0 ;
-volatile int counter = 0;
-volatile int timediff = 0;
-volatile int endofAuto = 1;
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 
@@ -243,60 +238,6 @@ void IRAM_ATTR readI2COnTimer()
 }
 //--------------------------------------------------------------------------------------
 //The following function is stored in RAM for interrupt
-void IRAM_ATTR calcT(){ // interrupt function
-  if(digitalRead(PhotoDiode) == LOW){ // This checks for pulse width
-    currT = micros(); // finds time in microseconds
-    timediff = currT - prevT; // calculate time of the pulse width
-    if(timediff < 60){ // if the width is less than 60, which is less than the pulse width of the sync pulse, but larger than the x/y pulses
-      if(flagx){ // if the x flag is on
-        // Serial.print("x-pulse: "); // print out the pulse value
-        // Serial.println(timediff);
-        delayMicroseconds(1);
-        flagx = 0; // set the flag to 0 so that we dont read the next pulse as x
-        flagy = 1; // turn this flag on to read the next pulse as y
-      }
-      else if(flagy){ // if x flag isnt on but y flag is on
-        // Serial.print("  y-pulse: "); // print out the pulse value
-        // Serial.println(timediff);
-        delayMicroseconds(1);
-//        flagx = 1;
-        flagy = 0; // reset the flag back to 0. At this point, both the x and y flags are off.
-      }
-      counter = 0; // reset the counter. This is mainly for the else statement where we look at the counter value and the flags on line 49 (if nothing changes)
-    }
-    else{
-//      Serial.println("im counting up");
-      counter++; // increments the counter
-//      Serial.println(counter);
-      if(counter == 3){ // if I have counted 3 sync pulses, then I know the next pulse has to be an x pulse.
-        flagx = 1; // because we know the next one is an x pulse, we can safely set the x flag on and prepare for the next pulse.
-        counter = 1; // reset the counter to 1. This time we did not set it to 0 because we need to calculate the x time distance, which requires the counter to be 1 (as seen in the else statement below)
-//        Serial.println(counter);
-      }
-    }
-    start = prevT; // sets the start time to the rising edge of the pulse. This helps find the x/y time distance
-    prevT = currT; // resets the previous time to the current time to be used in finding the pulse width
-  }
-  else{ // Here we are looking at the rising edge.
-//    Serial.println("im in else");
-    currT = micros(); // finds the time in microseconds
-    timediff = currT - start; //calculate the time difference
-    if(counter == 1 && (flagx || flagy)){ // checks whether the counter is 1 and if either flag is on. The counter is always on before the x and y pulses, as well as after the y pulse; however, we prevent the issue of counting the sync pulse after the y pulse by checking the flags, which are both 0 after the y pulse.
-      if(flagx){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
-        // Serial.print("    x time:"); // print the x time distance
-        // Serial.println(timediff);
-        digitalWrite(onboardLED,HIGH);
-        delayMicroseconds(1);
-      }
-      else{ // on y pulse
-        // Serial.print("      y time:"); // print the y time distance
-        // Serial.println(timediff);
-        delayMicroseconds(1);
-      }
-    }
-    prevT = currT; // set the previous time to current time (on rising edge) for pulse width.
-  }
-}
 //The end of the interrupt function for VIVE sensing
 //--------------------------------------------------------------------------------------
 // =================================================================
@@ -645,15 +586,12 @@ void loop()
       servoduty =0;
       weaponduty = 750*LEDC_RESOLUTION/10000;
     }
-    // if (autoMode == 1 && gameStatus == 1)
-    // {
-    //   attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
-    // }
-    //
-    // if (autoMode == 0)
-    // {
-    //   detachInterrupt(digitalPinToInterrupt(PhotoDiode));
-    // }
+    if (autoMode == 1 && gameStatus == 1)
+    {
+
+    }
+
+
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
     if ((psudoduty) >= 0){
     digitalWrite(A1,HIGH);
@@ -693,3 +631,26 @@ void receivePacket(){
 // =====================================================================
 // ========================== END OF LOOP ==============================
 // =====================================================================
+void TurnLeft()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION*850/10000);
+  ledcWrite(LEDC_CHANNEL_SERVO,450*LEDC_RESOLUTION/10000);
+}
+
+void TurnRight()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION*850/10000);
+  ledcWrite(LEDC_CHANNEL_SERVO,1050*LEDC_RESOLUTION/10000);
+}
+
+void GoStraight()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(A2,LOW);
+  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
+  ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
+}

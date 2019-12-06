@@ -78,6 +78,7 @@ void loop() {//a loop runs forever
   Serial.println("ButtonRead");
   Serial.println(buttonRead);
   sendPacket();//Run the subroutine to send out packet
+  delay(1);
   }
 
 
