@@ -23,10 +23,10 @@ def get_wave_array_str(filename, target_bits):
     return array_str
 
 
-def gen_wave_table(wav_file_list, target_file_name, scale_bits=8):
+def gen_wave_table(wav_file_list, target_file_name, scale_bits=16):
     with open(target_file_name, "w") as audio_table:
         print('#include <stdio.h>', file=audio_table)
-        print('const uint8_t audio_table[] PROGMEM = {', file=audio_table)
+        print('const uint16_t audio_table[] PROGMEM = {', file=audio_table)
         for wav in wav_file_list:
             print("processing: {}".format(wav))
             print(get_wave_array_str(filename=wav, target_bits=scale_bits), file=audio_table)

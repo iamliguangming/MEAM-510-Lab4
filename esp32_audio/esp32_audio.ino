@@ -26,12 +26,12 @@ i2s_pin_config_t pin_config = {
 };
 
 
-int i2s_write_sample_nb(uint8_t sample) {
+int i2s_write_sample_nb(uint16_t sample) {
   return i2s_write_bytes((i2s_port_t)i2s_num, (const char *)&sample, sizeof(uint32_t), 100);
 }
 
 //Main function to play samples from PROGMEM
-void playPROGMEMsample(const uint8_t* audioSample) {
+void playPROGMEMsample(const uint16_t* audioSample) {
 
   uint32_t sampleSize = sizeof(audioSample) * 4;
 
