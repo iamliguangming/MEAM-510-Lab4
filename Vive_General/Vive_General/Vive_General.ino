@@ -1,5 +1,5 @@
-#define diode 34// output from the circuit
-#define diode2 35 //
+#define diode 33// output from the circuit
+#define diode2 34 //
 
 #define autoMode 4
 #define statePin1 19
@@ -164,11 +164,17 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(diode2),calcT2, CHANGE);
 }
 
+int countup = 1;
+
 void loop() {
   // put your main code here, to run repeatedly:
+    countup = 1;
   clearSyncPulse(xFront);
+  countup = 2;
   clearSyncPulse(yFront);
+  countup = 3;
   clearSyncPulse(xBack);
+  countup = 4;
   clearSyncPulse(yBack);
 
 if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
@@ -191,12 +197,18 @@ if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
   Serial.println(NormalY);
   TurnLeft();
 }
-
+//xFront = 10;
+//yFront = 10;
+//xBack = 10;
+//yBack = 10;
 }
 
 void clearSyncPulse(int SignalCleared)
 {
   Serial.println("Im in");
+  Serial.print(countup);
+  Serial.print(" :");
+  Serial.println(SignalCleared);
   if (SignalCleared > 8000)
   {
     SignalCleared = 0;

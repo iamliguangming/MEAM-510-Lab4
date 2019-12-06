@@ -57,7 +57,8 @@ const int autoModeTransfer = 35;
 const int statePin1 = 39;
 const int statePin2 = 34;
 
-
+uint32_t duty;
+uint32_t servoduty;
 void TurnLeft();
 void TurnRight();
 void GoStraight();
@@ -564,8 +565,8 @@ void loop()
     int psudoduty = val -2000;//remap the DC PWM received -> -1000 to 1000
     Serial.println("WeaponRead");
     Serial.println(weaponread);//Print out the received value (for debugging)
-    uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
-    uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+    duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
+    servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
 
     if (weaponread == 2000)
     {
@@ -587,7 +588,7 @@ void loop()
     {
       duty = LEDC_RESOLUTION*850/1000;
     }
-
+    int flagAuto = 1;
     if (health ==0 || gameStatus == 0 || autoMode ==1)
     {
       duty = 0;
@@ -611,6 +612,7 @@ void loop()
       }
 
     }
+
 
 
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
@@ -656,28 +658,26 @@ void TurnLeft()
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
-  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION*850/10000);
-  ledcWrite(LEDC_CHANNEL_SERVO,450*LEDC_RESOLUTION/10000);
+  duty = LEDC_RESOLUTION*850/1000;
+  servoduty = 450*LEDC_RESOLUTION/10000;
 }
 
 void TurnRight()
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
-  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION*850/10000);
-  ledcWrite(LEDC_CHANNEL_SERVO,1050*LEDC_RESOLUTION/10000);
+  duty = LEDC_RESOLUTION*850/1000;
+  servoduty = 1050*LEDC_RESOLUTION/10000;
 }
 
 void GoStraight()
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
-  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
-  ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
+  duty = LEDC_RESOLUTION;
+  servoduty = 750*LEDC_RESOLUTION/10000;
 }
 void StopIt()
 {
-  ledcWrite(LEDC_CHANNEL,LEDC_RESOLUTION);
-  ledcWrite(LEDC_CHANNEL_SERVO,750*LEDC_RESOLUTION/10000);
-  ledcWrite(LEDC_CHANNEL_WEAPON,750*LEDC_RESOLUTION/10000);
+  servoduty = 750*LEDC_RESOLUTION/10000;
 }
