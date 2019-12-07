@@ -172,6 +172,7 @@ int countup = 1;
 int xfinal = 3002;
 int yfinal = 3249;
 int flagTime = 1;
+int initialYPos = 0;
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -194,7 +195,7 @@ void loop() {
     yBack= 0;
   }
 
-if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
+if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
 {
   Serial.print("xFront: ");
   Serial.println(xFront);
@@ -214,16 +215,20 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
   Serial.println(NormalY);
 //  GoStraight();
 
-  int initialYPos = 0;
   float err = 0.05;
-  if(flagYback){
-    initialYPos = yBack; 
-    Serial.println(initialYPos);
-    flagYback = 0;   
+//  flagYback = 1;
+  Serial.println(flagYback);
+  if(flagYback == 1){ 
+    Serial.println("        I'm in flag");
+    if(yBack>=1000){
+      initialYPos = yBack; 
+      Serial.println(initialYPos);
+      flagYback = 0; 
+    }      
   }
   int bufferDistanceL = 500; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
   int bufferDistanceR = 650;
-  int wallDistL = 50;
+  int wallDistL = 125;
 
   if(yFront>=yfinal){ // im on the left side
 //    Serial.println("          I'm in left side");
@@ -247,93 +252,136 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
       else{
         Serial.println("        I turned again");
         StopIt();
-        turned = 2;
+        if(initialYPos >= 1000){
+          turned = 2;
+        }
       }
     }
-//    else if(turned == 2){
-//      if(1 + NormalX >= err){
-//        TurnRight();
-//      }
-//      else{
-//        turned = 3;
-//      }
-//    }
-//    else if(turned == 3){
-//      if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
-//        GoStraight();
-//      }
-//      else{
-//        turned = 4;
-//      }
-//    }
-//    else if(turned == 4){
-//      if(NormalY + 1.00 >= 0.25*err){
-//        TurnRight();
-//      }
-//      else{
-//        turned = 5;
-//      }
-//    }
-//    else if(turned == 5){
-//      if(abs(yFront - yfinal) >= bufferDistanceL){// may need a different buffer Distance !!!!!!!!!!!!!!!
-//        GoStraight();
-//      }
-//      else{
-//        turned = 6;
-//      }
-//    }
-//    else if(turned == 6){
-//      if(1+NormalX >= err){
-//          TurnLeft();
-//      }
-//      else{
-//        turned = 7;
-//      }
-//    }
-//    else{
-//      GoStraight();
-//    }
-//  }
-//  else{
-//    if(steps == 1){
-//        steps = 2;
-//    }
-//    else if(steps == 2){
-//  
-//        if(abs(xfinal - xFront) >= bufferDistanceR){ // input around 1 foot here. This is the radius of curvature
-//          GoStraight();
-//        }
-//        else{
-//          
-//          StopIt();
-//          steps = 3;
-//        }
-//    }
-//    else if(steps == 3 ){
-//      if(steps == 3){
-//        if( 1.00 - NormalY >= 0.25*err){
-//          TurnLeft();
-//        }
-//        else{
-//          Serial.println("      I turn");
-//          StopIt();
-//          steps = 4;
-//        }
-//      }
-//    }
-//    else if( steps ==4){
-//      if(steps == 4){
-//        if(abs(yFront - yfinal) >= bufferDistanceR){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
-//          GoStraight();
-//        }
-//        else{
-//          Serial.println("      I go straight");
-//          StopIt();
-//          steps = 5;
-//        }
-//      }
-//    }
+      else if(turned == 2){
+        if(1 + NormalX >= 0.01){
+          TurnRight();
+        }
+        else{
+          StopIt();
+          turned = 3;
+        }
+      }
+    else if(turned == 3){
+      if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 4;
+      }
+    }
+    else if(turned == 4){
+      if(NormalY + 1.00 >= 0.25*err){
+        TurnRight();
+      }
+      else{
+        StopIt();
+        turned = 5;
+      }
+    }
+    else if(turned == 5){
+      if(abs(yFront - yfinal) >= bufferDistanceL){// may need a different buffer Distance !!!!!!!!!!!!!!!
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 6;
+      }
+    }
+    else if(turned == 6){
+      if(1+NormalX >= err){
+          TurnLeft();
+      }
+      else{
+        StopIt();
+        turned = 7;
+      }
+    }
+    else{
+      GoStraight();
+    }
   }
+  else{
+    int xfinal = 3002;
+    int yfinal = 4229; // temp position of the blue button
+//    if(turned == 0){
+      Serial.println("                  I'm in 0");
+      if(1+NormalX >= err){ // until I face North
+        TurnRight();
+      }
+      else{
+        Serial.println("        I turned");
+        StopIt();
+        turned = 1;
+      }
+    }
+    else if(turned == 1){
+      Serial.println(initialYPos);
+      if(1+NormalY >= err && ((yFront - initialYPos) >= wallDistL)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
+        Serial.println("                  I'm in 1!!!!!!!");
+        TurnRight();
+      }
+      else{
+        Serial.println("        I turned again");
+        StopIt();
+        if(initialYPos >= 1000){
+          turned = 2;
+        }
+      }
+    }
+      else if(turned == 2){
+        if(1 + NormalX >= 0.01){
+          TurnLeft();
+        }
+        else{
+          StopIt();
+          turned = 3;
+        }
+      }
+    else if(turned == 3){
+      if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 4;
+      }
+    }
+    else if(turned == 4){
+      if(1 - NormalY >= 0.25*err){
+        TurnLeft();
+      }
+      else{
+        StopIt();
+        turned = 5;
+      }
+    }
+    else if(turned == 5){
+      if(abs(yFront - yfinal) >= bufferDistanceL){// may need a different buffer Distance !!!!!!!!!!!!!!!
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 6;
+      }
+    }
+    else if(turned == 6){
+      if(1+NormalX >= err){
+          TurnRight();
+      }
+      else{
+        StopIt();
+        turned = 7;
+      }
+    }
+    else{
+      GoStraight();
+    }
   }
 }
 

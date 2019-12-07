@@ -590,12 +590,14 @@ void loop()
     }
     int flagAuto = 1;
     if (health ==0 || gameStatus == 0 || autoMode ==1)
+//    if (health ==0 || gameStatus == 0 || flagAuto ==1)
     {
       duty = 0;
       servoduty =0;
       weaponduty = 750*LEDC_RESOLUTION/10000;
     }
     if (autoMode == 1 && gameStatus == 1)
+//    if (flagAuto == 1 && gameStatus == 1)
     {
       digitalWrite(autoModeTransfer,HIGH);
       if (digitalRead(statePin1) && (!digitalRead(statePin2)))
