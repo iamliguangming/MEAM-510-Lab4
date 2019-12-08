@@ -268,7 +268,7 @@ FASTLED_USING_NAMESPACE
 // ===== GAME VARIABLES =====
 // change ROBOTNUM (1-4) and TEAMCOLOR (BLUE or RED) as necessary
 #define ROBOTNUM    2               // robot number on meta team (1-4)
-#define TEAMCOLOR   BLUE            // color for the robot team, either RED or BLUE
+#define TEAMCOLOR   RED            // color for the robot team, either RED or BLUE
 // ==========================
 
 #define NEO_LED_PIN 12              // pin attached to LED ring
@@ -589,15 +589,15 @@ void loop()
       duty = LEDC_RESOLUTION*850/1000;
     }
     int flagAuto = 1;
-//    if (health ==0 || gameStatus == 0 || autoMode ==1)
-    if (health ==0 || gameStatus == 0 || flagAuto ==1)
+   if (health ==0 || gameStatus == 0 || autoMode ==1)
+    // if (health ==0 || gameStatus == 0 || flagAuto ==1)
     {
       duty = 0;
       servoduty =0;
       weaponduty = 750*LEDC_RESOLUTION/10000;
     }
-//    if (autoMode == 1 && gameStatus == 1)
-    if (flagAuto == 1 && gameStatus == 1)
+   if (autoMode == 1 && gameStatus == 1)
+    // if (flagAuto == 1 && gameStatus == 1)
     {
       digitalWrite(autoModeTransfer,HIGH);
       if (digitalRead(statePin1) && (!digitalRead(statePin2)))
