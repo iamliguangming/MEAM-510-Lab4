@@ -268,7 +268,7 @@ FASTLED_USING_NAMESPACE
 // ===== GAME VARIABLES =====
 // change ROBOTNUM (1-4) and TEAMCOLOR (BLUE or RED) as necessary
 #define ROBOTNUM    2               // robot number on meta team (1-4)
-#define TEAMCOLOR   RED            // color for the robot team, either RED or BLUE
+#define TEAMCOLOR   BLUE            // color for the robot team, either RED or BLUE
 // ==========================
 
 #define NEO_LED_PIN 12              // pin attached to LED ring
