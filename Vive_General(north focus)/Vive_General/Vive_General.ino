@@ -166,11 +166,13 @@ void setup() {
 //  pinMode(pulse, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(diode), calcT, CHANGE); // make the interrupt
   attachInterrupt(digitalPinToInterrupt(diode2),calcT2, CHANGE);
+
+  steps = 0;
 }
 
 int countup = 1;
-int xfinal = 3002;
-int yfinal = 3249;
+int xfinal = 3218;
+int yfinal = 3614;
 int flagTime = 1;
 
 void loop() {
@@ -220,8 +222,8 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
     initialYPos = yBack; 
     flagYback = 0;   
   }
-  int bufferDistanceL = 500; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
-  int bufferDistanceR = 650;
+  int bufferDistanceL = 450; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
+  int bufferDistanceR = 450;
 
   if(yFront>=yfinal){ // im on the left side
     if(steps == 1){
@@ -252,7 +254,7 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
     }
     else if( steps ==4){
       if(steps == 4){
-        if(abs(yFront - yfinal) >= bufferDistanceL){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
+        if(abs(yFront - yfinal) >= bufferDistanceL - 50){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
           GoStraight();
         }
         else{
@@ -262,30 +264,26 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
         }
       }
     }
-  //  else if(steps == 5){
-  //    if(steps == 5){
-  //      if(1+NormalX >= err){
-  //        TurnLeft();
-  //      }
-  //    }
-  //    else{
-  //      steps = 6;
-  //    }
-  ////    if(turned == 4){
-  ////      if(NormalY + 1 >= err){
-  ////        TurnRight();
-  ////      }
-  ////      else{
-  ////        turned = 5;
-  ////      }
-  ////    }
-  //  }
-  //  else if(steps == 6){
-  //    if(steps == 6){
-  //      GoStraight();
-  //    }
+    else if(steps == 5){
+      if(steps == 5){
+        if(1+NormalX >= err){
+          TurnLeft();
+        }
+      }
+      else{
+        StopIt();
+        steps = 6;
+      }
+    }
+    else if(steps == 6){
+      if(steps == 6){
+        GoStraight();
+      }
+    }
   }
   else{
+    int xfinal = 3230;
+    int yfinal = 4356;
     if(steps == 1){
         steps = 2;
     }
@@ -322,6 +320,22 @@ if ((xFront>=300) && (yFront>=300) && (xBack>=300) && (yBack>=300))
           StopIt();
           steps = 5;
         }
+      }
+    }
+    else if(steps == 5){
+      if(steps == 5){
+        if(1+NormalX >= err){
+          TurnRight();
+        }
+      }
+      else{
+        StopIt();
+        steps = 6;
+      }
+    }
+    else if(steps == 6){
+      if(steps == 6){
+        GoStraight();
       }
     }
   }
