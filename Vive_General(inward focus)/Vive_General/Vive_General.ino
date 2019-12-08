@@ -1,4 +1,4 @@
-#define diode 33// output from the circuit
+ #define diode 33// output from the circuit
 #define diode2 34    //
 
 #define autoMode 4
@@ -86,13 +86,23 @@ void IRAM_ATTR calcT(){ // interrupt function
       if(flagx){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
         // Serial.print("    x time:"); // print the x time distance
         // Serial.println(timediff);
-        xFront = timediff;
+        if(timediff >=1000 && timediff <=8000){
+          xFront = timediff;
+        }
+        else{
+          xFront = 0;
+        }
         delayMicroseconds(1);
       }
       else{ // on y pulse
         // Serial.print("      y time:"); // print the y time distance
         // Serial.println(timediff);
-        yFront = timediff;
+        if(timediff >=1000 && timediff <=8000){
+          yFront = timediff;
+        }
+        else{
+          yFront = 0;
+        }
         delayMicroseconds(1);
       }
     }
@@ -141,13 +151,23 @@ void IRAM_ATTR calcT2(){ // interrupt function
       if(flagx2){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
         // Serial.print("    x2 time:"); // print the x time distance
         // Serial.println(timediff2);
-        xBack = timediff2;
+        if(timediff2 >=1000 && timediff2 <=8000){
+          xBack = timediff2;
+        }
+        else{
+          xBack = 0;
+        }
         delayMicroseconds(1);
       }
       else{ // on y pulse
         // Serial.print("      y2 time:"); // print the y time distance
         // Serial.println(timediff2);
-        yBack = timediff2;
+        if(timediff2 >=1000 && timediff2 <=8000){
+          yBack = timediff2;
+        }
+        else{
+          yBack = 0;
+        }
         delayMicroseconds(1);
       }
     }
@@ -166,12 +186,17 @@ void setup() {
 //  pinMode(pulse, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(diode), calcT, CHANGE); // make the interrupt
   attachInterrupt(digitalPinToInterrupt(diode2),calcT2, CHANGE);
+
+  int turned = 0;
 }
 
 int countup = 1;
-int xfinal = 3002;
-int yfinal = 3249;
+int xfinal = 3205;
+int yfinal = 3537;
 int flagTime = 1;
+int initialYPos = 0;
+int flagLR = 0;
+int flagCheckLR = 1;
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -194,7 +219,7 @@ void loop() {
     yBack= 0;
   }
 
-if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
+if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
 {
   Serial.print("xFront: ");
   Serial.println(xFront);
@@ -205,147 +230,235 @@ if (xFront!=0 && yFront!=0 && xBack!=0 && yBack!=0)
   Serial.print("yBack: ");
   Serial.println(yBack);
   DirectionX = xFront - xBack;
+  Serial.println(DirectionX);
+  Serial.println(DirectionX * DirectionX);
   DirectionY = yFront - yBack;
-  float NormalX = DirectionX / sqrt(DirectionX * DirectionX + DirectionY * DirectionY);
-  float NormalY = DirectionY / sqrt(DirectionX * DirectionX + DirectionY * DirectionY);
+  Serial.println(DirectionY);
+  Serial.println(DirectionY * DirectionY);
+  float NormalX = DirectionX / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
+  float NormalY = DirectionY / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
   Serial.print("NormalX");
   Serial.println(NormalX);
   Serial.print("NormalY");
   Serial.println(NormalY);
 //  GoStraight();
 
-  int initialYPos = 0;
-  int err = 0.05;
-  if(flagYback){
-    initialYPos = yBack; 
-    flagYback = 0;   
+  float err = 0.02;
+//  flagYback = 1;
+//  Serial.println(flagYback);
+//  if(flagYback == 1){ 
+//    Serial.println("        I'm in flag");
+//    if(yBack>=1000){
+//      initialYPos = yBack; 
+//      Serial.println(initialYPos);
+//      flagYback = 0; 
+//    }      
+//  }
+  int bufferDistanceL = 450; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
+  int bufferDistanceR = 450;
+  int initialYPosR = 2041;
+  int initialYPosL = 6045;
+  int wallDistL = 200;
+
+  if(flagCheckLR){
+    if(yFront>=yfinal){
+      flagLR = 1; // Left
+    }
+    else{
+      flagLR = 0; // Right
+    }
+    flagCheckLR = 0;
   }
-  int bufferDistance = 300; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
-  if(steps == 1){
-//    if(NormalY <= -err){ // if facing right
-      if(abs(1+NormalX) <= err){ // until I face North
+
+  if(flagLR){ // im on the left side
+//    if(NormalX != 0 && NormalY != 0){
+    Serial.println("          I'm in left side");
+    if(turned == 0){
+      Serial.println("                  I'm in 0");
+      if(1+NormalX >= err){ // until I face North
         TurnLeft();
+      }
+      else{
+        Serial.println("        I turned");
+        StopIt();
         turned = 1;
       }
-      else{
-        steps = 2;
-      }
-//    }
-//    else if(abs(1-NormalX) <= err){
-//      GoStraight();
-//    }
-  }
-  else if(steps == 2){
-    if(turned == 1){
-      if(1-NormalY >= err && (abs(yFront - initialYPos) >= 50)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
+    }
+    else if(turned == 1){
+      Serial.println(initialYPos);
+      if(1-NormalY >= err && ((initialYPosL - yFront ) >= wallDistL)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
+        Serial.println("                  I'm in 1!!!!!!!");
         TurnLeft();
       }
       else{
-        turned = 2;
-        steps = 0;
+        Serial.println("        I turned again");
+        StopIt();
+//        if(initialYPos >= 1000){
+          turned = 2;
+//        }
       }
     }
-    else{
-      if(abs(xfinal - xFront) >= bufferDistance){ // input around 1 foot here. This is the radius of curvature
+      else if(turned == 2){
+        Serial.println("                  I'm in 2");
+        if(1 + NormalX >= 0.005){
+          TurnRight();
+        }
+        else{
+          StopIt();
+          turned = 3;
+        }
+      }
+    else if(turned == 3){
+//      if(abs(xfinal - xFront) >= bufferDistanceL + 120){ // input around 1 foot here. This is the radius of curvature
+      Serial.println("                  I'm in 3");
+      if(abs(xfinal - xFront) >= bufferDistanceL+200){
         GoStraight();
       }
       else{
-        steps = 3;
-//        turned = 0;
-      }
-    }
-  }
-  else if(steps == 3 || turned == 2){
-    if(steps == 3){
-      if(NormalY + 1 >= err){
-        TurnRight();
-      }
-      else{
-        steps = 4;
-      }
-    }
-    if(turned == 2){
-      if(1 + NormalX >= err){
-        TurnRight();
-      }
-      else{
-        turned = 3;
-      }
-    }
-  }
-  else if( steps ==4 || turned == 3){
-    if(steps == 4){
-      if(abs(yFront - yfinal) >= bufferDistance){ // may need a different buffer distance !!!!!!!!!!!!!!!!!!
-        GoStraight();
-      }
-      else{
-        steps = 5;
-      }
-    }
-    if(turned == 3){
-      if(abs(xfinal - xFront) >= bufferDistance){ // input around 1 foot here. This is the radius of curvature
-        GoStraight();
-      }
-      else{
+        StopIt();
         turned = 4;
       }
-    } 
-  }
-  else if(steps == 5 || turned == 4){
-    if(steps == 5){
-      if(1+NormalX >= err){
-        TurnLeft();
-      }
     }
-    else{
-      steps = 6;
-    }
-    if(turned == 4){
-      if(NormalY + 1 >= err){
+    else if(turned == 4){
+      Serial.println("                  I'm in 4");
+      if(NormalY + 1.00 >= 0.25*err){
+//      if((NormalX <=0.05){
         TurnRight();
       }
       else{
+        StopIt();
         turned = 5;
       }
     }
-  }
-  else if(steps == 6 || turned == 5){
-    if(steps == 6){
-      GoStraight();
-    }
-    if(turned ==5){
-      if(abs(yFront - yfinal) >= bufferDistance){// may need a different buffer Distance !!!!!!!!!!!!!!!
+    else if(turned == 5){
+      Serial.println("                  I'm in 5");
+      if(abs(yFront - yfinal) >= bufferDistanceL-280){// may need a different buffer Distance !!!!!!!!!!!!!!!
         GoStraight();
       }
       else{
+        StopIt();
         turned = 6;
       }
     }
-  }
-  else if(turned == 6){
-    if(1-NormalX >= err){
-        TurnLeft();
+    else if(turned == 6){
+      Serial.println("                  I'm in 6");
+      if(1+NormalX >= err){
+          TurnLeft();
+      }
+      else{
+        StopIt();
+        turned = 7;
+      }
     }
     else{
-      turned = 7;
+      Serial.println("                  I'm in 7");
+      GoStraight();
     }
+//  }
   }
   else{
-    GoStraight();
+    int xfinal = 3211;
+    int yfinal = 4302; // temp position of the blue button
+//    if(NormalX != 1.00 && NormalY != 1.00){
+    if(abs(yFront - initialYPosR) <= wallDistL && turned != 7 && 1+NormalX>= err){
+      TurnLeft();
+      turned = 3;
+    } 
+    else if(abs(xFront - xfinal) <= 150 && turned != 7 && NormalX <= 0.05){
+      TurnLeft();
+      turned = 5;
+    }
+    else{
+    if(turned == 0){
+      Serial.println("          I'm in right side");
+      Serial.println("                  I'm in 0");
+      if(1+NormalX >= err && NormalY <=0){ // until I face North
+        TurnRight();
+      }
+      else if(1+NormalX >= err && NormalY >=0){ // until I face North
+        TurnRight();
+      }
+      else{
+        Serial.println("        I turned");
+        StopIt();
+        turned = 1;
+      }
+    }
+    else if(turned == 1){
+      Serial.println(initialYPos);
+      if(1+NormalY >= err && ((yFront - initialYPosR) >= wallDistL)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
+        Serial.println("                  I'm in 1!!!!!!!");
+        TurnRight();
+      }
+      else{
+        Serial.println("        I turned again");
+        StopIt();
+//        if(initialYPos >= 1000){
+          turned = 2;
+//        }
+      }
+    }
+      else if(turned == 2){
+        Serial.println("                  I'm in 2");
+        if(1 + NormalX >= 0.005){
+          TurnLeft();
+        }
+        else{
+          StopIt();
+          turned = 3;
+        }
+      }
+    else if(turned == 3){
+      Serial.println("                  I'm in 3");
+      if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 4;
+      }
+    }
+    else if(turned == 4){
+      Serial.println("                  I'm in 4");
+//      if(1 - NormalY >= 0.25*err){
+      if(NormalX <=0.05){
+        TurnLeft();
+      }
+      else{
+        StopIt();
+        turned = 5;
+      }
+    }
+    else if(turned == 5){
+      Serial.println("                  I'm in 5");
+      if(abs(yFront - yfinal) >= bufferDistanceL-280){// may need a different buffer Distance !!!!!!!!!!!!!!!
+        GoStraight();
+      }
+      else{
+        StopIt();
+        turned = 6;
+      }
+    }
+    else if(turned == 6){
+      Serial.println("                  I'm in 6");
+      if(1+NormalX >= err){
+          TurnRight();
+          Serial.println("Im turning Right");
+      }
+      else{
+        StopIt();
+        turned = 7;
+      }
+    }
+    else{
+      Serial.println("                  I'm in 7");
+      GoStraight();
+    }
   }
-//
-
-  
-//  if(NormalX >= err){
-//    GoStraight();
+  }
 //  }
-//  TurnLeft();
 }
-//xFront = 10;
-//yFront = 10;
-//xBack = 10;
-//yBack = 10;
-}
+}                                                                                                                                                                   
 
 //void clearSyncPulse(int SignalCleared)
 //{

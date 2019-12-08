@@ -41,6 +41,7 @@
 const int LEDC_CHANNEL = 0;//interrupt channel 0
 const int LEDC_CHANNEL1 = 1;//interrupt channel 1
 const int LEDC_CHANNEL_SERVO = 2;//interrupt channel 2
+const int LEDC_CHANNEL_WEAPON = 3;
 const int LEDC_RESOLUTION_BITS=13;//bits of resolution is 13
 const int LEDC_RESOLUTION = ((1<<LEDC_RESOLUTION_BITS)-1);//resolution is 2^13
 const int LEDC_FREQ_HZ = 5000;//interrupt frequency set to be 5000
@@ -51,12 +52,24 @@ const int Enable = 4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
 const int PhotoDiode = 27;//Pin saved for communication with Photodiode
+const int Weaponcontrol = 9;
+const int autoModeTransfer = 35;
+const int statePin1 = 39;
+const int statePin2 = 34;
 
+uint32_t duty;
+uint32_t servoduty;
+void TurnLeft();
+void TurnRight();
+void GoStraight();
+void StopIt();
 /*Constants for WiFiUDP*/
 int port = 1609;//Port number 1609 used for communication
 int cb = 0;//A flag used to tell if a package is received
 int val = 0;//A value used to store analogread value
 int servoread = 0;//A value used to store servo receving value
+int weaponread = 0;
+uint32_t weaponduty;
 void receivePacket();//function prototype for receiving packet
 int MessageReceived = 0;//declare the messagereceived integer
 const char* ssid = "SmartGuangming";//initialize WiFi name
@@ -70,14 +83,6 @@ IPAddress ipTarget(192,168,1,125);//declare the ipaddress sending packet to
 
 //--------------------------------------------------------------------------------------
 //The following are the constants used for the VIVE sensing
-int prevT =0;
-int currT = 0;
-int flagx = 1;
-int flagy = 0;
-int start = 0 ;
-int counter = 0;
-int timediff = 0;
-int endofAuto = 1;
 //The end for constants used for VIVE sensing
 //--------------------------------------------------------------------------------------
 
@@ -239,59 +244,6 @@ void IRAM_ATTR readI2COnTimer()
 }
 //--------------------------------------------------------------------------------------
 //The following function is stored in RAM for interrupt
-void IRAM_ATTR calcT(){ // interrupt function
-  if(digitalRead(PhotoDiode) == LOW){ // This checks for pulse width
-    currT = micros(); // finds time in microseconds
-    timediff = currT - prevT; // calculate time of the pulse width
-    if(timediff < 60){ // if the width is less than 60, which is less than the pulse width of the sync pulse, but larger than the x/y pulses
-      if(flagx){ // if the x flag is on
-        Serial.print("x-pulse: "); // print out the pulse value
-        Serial.println(timediff);
-        delayMicroseconds(1);
-        flagx = 0; // set the flag to 0 so that we dont read the next pulse as x
-        flagy = 1; // turn this flag on to read the next pulse as y
-      }
-      else if(flagy){ // if x flag isnt on but y flag is on
-        Serial.print("  y-pulse: "); // print out the pulse value
-        Serial.println(timediff);
-        delayMicroseconds(1);
-//        flagx = 1;
-        flagy = 0; // reset the flag back to 0. At this point, both the x and y flags are off.
-      }
-      counter = 0; // reset the counter. This is mainly for the else statement where we look at the counter value and the flags on line 49 (if nothing changes)
-    }
-    else{
-//      Serial.println("im counting up");
-      counter++; // increments the counter
-//      Serial.println(counter);
-      if(counter == 3){ // if I have counted 3 sync pulses, then I know the next pulse has to be an x pulse.
-        flagx = 1; // because we know the next one is an x pulse, we can safely set the x flag on and prepare for the next pulse.
-        counter = 1; // reset the counter to 1. This time we did not set it to 0 because we need to calculate the x time distance, which requires the counter to be 1 (as seen in the else statement below)
-//        Serial.println(counter);
-      }
-    }
-    start = prevT; // sets the start time to the rising edge of the pulse. This helps find the x/y time distance
-    prevT = currT; // resets the previous time to the current time to be used in finding the pulse width
-  }
-  else{ // Here we are looking at the rising edge.
-//    Serial.println("im in else");
-    currT = micros(); // finds the time in microseconds
-    timediff = currT - start; //calculate the time difference
-    if(counter == 1 && (flagx || flagy)){ // checks whether the counter is 1 and if either flag is on. The counter is always on before the x and y pulses, as well as after the y pulse; however, we prevent the issue of counting the sync pulse after the y pulse by checking the flags, which are both 0 after the y pulse.
-      if(flagx){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
-        Serial.print("    x time:"); // print the x time distance
-        Serial.println(timediff);
-        delayMicroseconds(1);
-      }
-      else{ // on y pulse
-        Serial.print("      y time:"); // print the y time distance
-        Serial.println(timediff);
-        delayMicroseconds(1);
-      }
-    }
-    prevT = currT; // set the previous time to current time (on rising edge) for pulse width.
-  }
-}
 //The end of the interrupt function for VIVE sensing
 //--------------------------------------------------------------------------------------
 // =================================================================
@@ -316,7 +268,7 @@ FASTLED_USING_NAMESPACE
 // ===== GAME VARIABLES =====
 // change ROBOTNUM (1-4) and TEAMCOLOR (BLUE or RED) as necessary
 #define ROBOTNUM    2               // robot number on meta team (1-4)
-#define TEAMCOLOR   BLUE            // color for the robot team, either RED or BLUE
+#define TEAMCOLOR   RED            // color for the robot team, either RED or BLUE
 // ==========================
 
 #define NEO_LED_PIN 12              // pin attached to LED ring
@@ -515,18 +467,13 @@ void setup()
   //Set up IP address, GateWay and Mask
   WiFi.begin(ssid);//Begin WiFi connection at selected WiFi name
   WiFi.setSleep(false);//Set mode of WiFi to let it never sleep
-  if (endofAuto == 0)
-  {
-    detachInterrupt(digitalPinToInterrupt(PhotoDiode));
-
-  }
   while (WiFi.status()!=WL_CONNECTED);//A loop runs until WiFi is connected
   {
     delay(500);//wait for 0.5 seconds
     Serial.print(".");//print a dot while waiting
   }
   Serial.println("WiFi Connected ");//Print WiFi is connected when it is connected
-  digitalWrite(onboardLED,HIGH);
+  // digitalWrite(onboardLED,HIGH);
   /* The following lines turns the WiFi mode into AP mode */
   // WiFi.mode(WIFI_AP);
   // WiFi.softAP(ssid);
@@ -538,16 +485,22 @@ void setup()
   ledcSetup(LEDC_CHANNEL,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC channel 0 at 5000HZ, 2^13 resolution
   ledcSetup(LEDC_CHANNEL1,LEDC_FREQ_HZ,LEDC_RESOLUTION_BITS);//Set up LEDC Channel 1 at 5000Hz, 2^13 resolution
   ledcSetup(LEDC_CHANNEL_SERVO,LEDC_FREQ_HZ_SERVO,LEDC_RESOLUTION_BITS);//Setup LEDC Channel 2 at 50Hz, 2^13 resolution
+  ledcSetup(LEDC_CHANNEL_WEAPON,LEDC_FREQ_HZ_SERVO,LEDC_RESOLUTION_BITS);
   ledcAttachPin(Enable,LEDC_CHANNEL);//Attach ledc at LEDC_CHANNEL to PWM1
   ledcAttachPin(Enable1,LEDC_CHANNEL1);//Attch ledc at LEDC_CHANNEL_1 to PWM2
   ledcAttachPin(ServoControl,LEDC_CHANNEL_SERVO);//Attach ledc at LEDC_CHANNEL_SERVO to servo control pin
+  ledcAttachPin(Weaponcontrol,LEDC_CHANNEL_WEAPON);
   pinMode(A1,OUTPUT);//Set 1A as output
   pinMode(N_A1,OUTPUT);//Set 4A as output
   // pinMode(EnableControl,INPUT);
   pinMode(ServoControl,OUTPUT);//Set ServoControl as output
   pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
+  pinMode(Weaponcontrol,OUTPUT);
+  pinMode(statePin1,INPUT);
+  pinMode(statePin2,INPUT);
+  pinMode(autoModeTransfer,OUTPUT);
 
-  attachInterrupt(digitalPinToInterrupt(PhotoDiode),calcT,CHANGE);//make the interrupt
+
 }
 // =====================================================================
 // ========================== END OF SETUP =============================
@@ -571,6 +524,7 @@ void loop()
     static int health;              // robot's health
 
     static int respawnTimer;        // amount of time remaining on respawn
+
 
     if (readI2C)
     {
@@ -596,6 +550,10 @@ void loop()
             respawnTimer = data_rd[2];
         }
     }
+    while (WiFi.status()!=WL_CONNECTED)
+    {
+      WiFi.begin(ssid);//Begin WiFi connection at selected WiFi name
+    }
     // ========================== I2C end ==============================
 
     // ========================= LED start =============================
@@ -605,18 +563,58 @@ void loop()
     // ========================== WiFi Control start ==============================
     receivePacket();//run the receive packet subroutine
     int psudoduty = val -2000;//remap the DC PWM received -> -1000 to 1000
-    Serial.println(psudoduty);//Print out the received value (for debugging)
-    uint32_t duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
-    uint32_t servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+    Serial.println("WeaponRead");
+    Serial.println(weaponread);//Print out the received value (for debugging)
+    duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
+    servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
+
+    if (weaponread == 2000)
+    {
+       weaponduty = 450*LEDC_RESOLUTION/10000;
+    }
+    else if(weaponread ==1000)
+    {
+       weaponduty = 1050*LEDC_RESOLUTION/10000;
+    }
     if (health == 0)
     {
         clearLEDs();
         first=1;
         ShowRespawnTimer(respawnTimer);
-        duty = 0;
-        servoduty =0;
+
     }
      FastLEDshowESP32();
+    if ((servoread <= 4200 || servoread >= 4800) && psudoduty < 0)
+    {
+      duty = LEDC_RESOLUTION*850/1000;
+    }
+    int flagAuto = 1;
+   if (health ==0 || gameStatus == 0 || autoMode ==1)
+    // if (health ==0 || gameStatus == 0 || flagAuto ==1)
+    {
+      duty = 0;
+      servoduty =0;
+      weaponduty = 750*LEDC_RESOLUTION/10000;
+    }
+   if (autoMode == 1 && gameStatus == 1)
+    // if (flagAuto == 1 && gameStatus == 1)
+    {
+      digitalWrite(autoModeTransfer,HIGH);
+      if (digitalRead(statePin1) && (!digitalRead(statePin2)))
+      {
+        TurnRight();
+      }
+      if(!digitalRead(statePin1) && digitalRead(statePin2))
+      {
+        TurnLeft();
+      }
+      if(digitalRead(statePin1) && digitalRead(statePin2))
+      {
+        GoStraight();
+      }
+
+    }
+
 
 
   //When psudoduty is greater than 0, turn the wheels forward by setting both direction pins to HIGH
@@ -638,7 +636,9 @@ void loop()
     ledcWrite(LEDC_CHANNEL1,duty);//Run the motors at given duty cycle to control there speed
       Serial.println("Servo duty");
       Serial.println(map(servoread,4000,5000,450,1050));//Print out the servo duty(For debugging)
-      ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
+    ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
+    ledcWrite(LEDC_CHANNEL_WEAPON,weaponduty);
+
     cb = 0;//Set the receive pack back to 0
     // ========================== WiFi Control end ==============================
 
@@ -650,9 +650,36 @@ void receivePacket(){
     UDPTestServer.read(packetBuffer,UDP_PACKET_SIZE);//Read packetbuffer with UDP_PACKET_SIZE from the UDP packet received
     val = (packetBuffer[1]<<8 |packetBuffer[0]);//Save the first two bytes of the packet received as the PWM for DC motors
     servoread = (packetBuffer[3]<<8|packetBuffer[2]);//Save the second two bytes of the packet received as the PWM for servo motors
-
+    weaponread = (packetBuffer[5]<<8|packetBuffer[4]);
   }
 }
 // =====================================================================
 // ========================== END OF LOOP ==============================
 // =====================================================================
+void TurnLeft()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  duty = LEDC_RESOLUTION*850/1000;
+  servoduty = 450*LEDC_RESOLUTION/10000;
+}
+
+void TurnRight()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  duty = LEDC_RESOLUTION*850/1000;
+  servoduty = 1050*LEDC_RESOLUTION/10000;
+}
+
+void GoStraight()
+{
+  digitalWrite(A1,HIGH);
+  digitalWrite(N_A1,LOW);
+  duty = LEDC_RESOLUTION;
+  servoduty = 750*LEDC_RESOLUTION/10000;
+}
+void StopIt()
+{
+  servoduty = 750*LEDC_RESOLUTION/10000;
+}
