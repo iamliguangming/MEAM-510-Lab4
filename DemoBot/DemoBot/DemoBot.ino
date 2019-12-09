@@ -51,8 +51,7 @@ const int N_A1 = 19;//4A used to control the NOT direction on H bridge
 const int Enable = 4;//Enable pin used to control the PWM on H bridge 1
 const int Enable1 = 0;//Enable pin used to control PWM on H bridge 2
 const int ServoControl = 22;//Servo control pin used to control the PWM for the servo
-const int PhotoDiode = 27;//Pin saved for communication with Photodiode
-const int Weaponcontrol = 9;
+const int Weaponcontrol = 9;//Pin used for weapon control
 const int autoModeTransfer = 35;
 const int statePin1 = 39;
 const int statePin2 = 34;
@@ -375,33 +374,37 @@ void ShowRobotNum(void)
     }
 }
 
-int first = 1;
-int maxHp = 0;
-double multiplier = 0.0;
-int healthLeds[] = {1,2,3,4,5,7,8,9,10,11,13,14,15,16,17,19,20,21,22,23};
+int first = 1;//The flag for receving max health
+int maxHp = 0;//Maximum health initialized as a global
+double multiplier = 0.0;//The multiplier used for damage/hit
+int healthLeds[] = {1,2,3,4,5,7,8,9,10,11,13,14,15,16,17,19,20,21,22,23};//The array for LED used for health display
 
+
+//------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------subroutine to display health------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------
 void ShowHealth(int health)
 {
     // TODO: implement this function
-    int healthLength = 20;
-    Serial.print( "HEALTH " );
+    int healthLength = 20; // 20 LEDs in total to display the health
+    Serial.print( "HEALTH " );//Print the health points
     Serial.println(health);
-    if(first && (health != 0)){
-      maxHp = health;
+    if(first && (health != 0)){//If this is the first time receving health after respawning and the health received is not 0
+      maxHp = health;//Set max health as this heathreceived
     Serial.print( "Max hp " );
     Serial.println(maxHp);
-      for(int i = 0; i < healthLength; i++){
+      for(int i = 0; i < healthLength; i++){//And turn on all the health lights on LED
         leds[healthLeds[i]] = HEALTHCOLOR;
       }
-      multiplier = 20.0/maxHp;
-      first = 0;
+      multiplier = 20.0/maxHp;//Calculate the multiplier using 20/the maxHp (This is the number of lights to turn off for each hit taken)
+      first = 0;//Clear the first receving flag
     }
-    else{
-      int hpDiff = maxHp - health;
-      if(hpDiff > 0){
-        int minusHp = hpDiff*multiplier;
+    else{//If this not the first time receving health
+      int hpDiff = maxHp - health;//calculate the damage taken based on MaxHP - Current Health
+      if(hpDiff > 0){//When the damage taken is greater than o
+        int minusHp = hpDiff*multiplier;//the lights turned off is the HP lost * the multiplier
         for(int i = 0; i < minusHp; i++){
-          leds[healthLeds[i]] = 0;
+          leds[healthLeds[i]] = 0;//Display reamining health on the TOPHAT
         }
       }
     }
@@ -416,14 +419,18 @@ void clearLEDs(void)
 }
 
 
-int maxTime = 15;
+int maxTime = 15;//Max time taken to respawn
 
-void ShowRespawnTimer(int respawnTime)
+//------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------subroutine to show respawn timer-----------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------
+
+void ShowRespawnTimer(int respawnTime)//subroutine to display the respawn time remaining using LED
 {
     // TODO: implement this function
-    int numberleds = map(respawnTime,0,maxTime,0,24);
+    int numberleds = map(respawnTime,0,maxTime,0,24);//The number of LEDs is mapped from the respawn time remaining to 24 LEDs
     for(int i = 0; i <= numberleds; i++){
-      leds[i] = RED;
+      leds[i] = RED;//Turn on the number of LEDs in red based on the remaining respawn time
     }
 }
 // =================================================================
@@ -434,9 +441,9 @@ void ShowRespawnTimer(int respawnTime)
 // =====================================================================
 // ============================= SETUP =================================
 // =====================================================================
-void setup()
+void setup()//Setup function which only runs once
 {
-    Serial.begin(115200);
+    Serial.begin(115200);//turn on the serial monitor for debugging
 
     // ========================= I2C start =============================
     ESP_ERROR_CHECK(i2c_master_init()); // initialize the i2c
@@ -460,7 +467,7 @@ void setup()
   Serial.println();   //Printing information regarding to connection
   Serial.print("Connecting to");
   Serial.println(ssid);
-  pinMode(onboardLED,OUTPUT);
+  pinMode(onboardLED,OUTPUT);//Set the onboard LED to be an output
 
   WiFi.mode(WIFI_STA);//Set WiFi mode to station
   WiFi.config(myIPaddress,IPAddress(192,168,1,1),IPAddress(255,255,255,0));
@@ -494,11 +501,10 @@ void setup()
   pinMode(N_A1,OUTPUT);//Set 4A as output
   // pinMode(EnableControl,INPUT);
   pinMode(ServoControl,OUTPUT);//Set ServoControl as output
-  pinMode(PhotoDiode,INPUT);//Set the PhotoDiode pin as an input pin
-  pinMode(Weaponcontrol,OUTPUT);
-  pinMode(statePin1,INPUT);
-  pinMode(statePin2,INPUT);
-  pinMode(autoModeTransfer,OUTPUT);
+  pinMode(Weaponcontrol,OUTPUT);//Set the weapon control pin as an output pin
+  pinMode(statePin1,INPUT);//Set the autonomous state control pin1 as an output
+  pinMode(statePin2,INPUT);//Set the autonomous state control pin2 as an output
+  pinMode(autoModeTransfer,OUTPUT);//Set the autonomous control pin connected to second ESP as output
 
 
 }
@@ -568,49 +574,54 @@ void loop()
     duty = LEDC_RESOLUTION*abs(psudoduty)/1000;//duty cycle = psudoduty*resolution/1000
     servoduty = map(servoread,4000,5000,450,1050)*LEDC_RESOLUTION/10000;//map the servo duty to 450-1050 which correspond to full left and full right
 
-    if (weaponread == 2000)
+    if (weaponread == 2000)//If the weapon control read from UDP packet is 2000
     {
-       weaponduty = 450*LEDC_RESOLUTION/10000;
+       weaponduty = 450*LEDC_RESOLUTION/10000;//Set the duty pulse of weapon control to be ~1.5ms which makes the continuous servo to go counterclockwise
     }
-    else if(weaponread ==1000)
+    else if(weaponread ==1000)//If the weapon control read from UDP_PACKET is 1000
     {
-       weaponduty = 1050*LEDC_RESOLUTION/10000;
+       weaponduty = 1050*LEDC_RESOLUTION/10000;//Set the duty pulse of weapon control to be ~2.5ms which makes the continuous servo to go clockwise
     }
-    if (health == 0)
+    if (health == 0)//When health is 0
     {
-        clearLEDs();
-        first=1;
-        ShowRespawnTimer(respawnTimer);
+        clearLEDs();//Clear all onboard LEDs
+        first=1;//Rest the first receving flag
+        ShowRespawnTimer(respawnTimer);//Display the respawn timer
 
     }
      FastLEDshowESP32();
-    if ((servoread <= 4200 || servoread >= 4800) && psudoduty < 0)
+
+     //The following if statement resolves the problem which happens when the steering wheels are not rotating during large & fast turns
+    if ((servoread <= 4200 || servoread >= 4800) && psudoduty < 0)//If the wheels are turning at maxAngle and going forward
     {
-      duty = LEDC_RESOLUTION*850/1000;
+      duty = LEDC_RESOLUTION*850/1000;//Manually set the motor duty to be only 85% of max
     }
-    int flagAuto = 1;
-   if (health ==0 || gameStatus == 0 || autoMode ==1)
-    // if (health ==0 || gameStatus == 0 || flagAuto ==1)
+
+   if (health ==0 || gameStatus == 0 || autoMode ==1)//When health is 0 or game is not on or automode is on
     {
-      duty = 0;
-      servoduty =0;
-      weaponduty = 750*LEDC_RESOLUTION/10000;
+      duty = 0;//Manually turn of the motor
+      servoduty =0;//Manually turn off the steering wheel
+      weaponduty = 750*LEDC_RESOLUTION/10000;//Center the weapon servo
     }
-   if (autoMode == 1 && gameStatus == 1)
+   if (autoMode == 1 && gameStatus == 1)//If both the game is on and is in autoMode
     // if (flagAuto == 1 && gameStatus == 1)
     {
-      digitalWrite(autoModeTransfer,HIGH);
-      if (digitalRead(statePin1) && (!digitalRead(statePin2)))
+      digitalWrite(autoModeTransfer,HIGH);//Tell the second ESP that autoMode is on by setting the transfer pin to high
+      if (digitalRead(statePin1) && (!digitalRead(statePin2)))//If state1 is High and and state2 is Low
       {
-        TurnRight();
+        TurnRight();//Turn Right ( included in the subrountines below)
       }
-      if(!digitalRead(statePin1) && digitalRead(statePin2))
+      if(!digitalRead(statePin1) && digitalRead(statePin2))// If state 1 is Low and State 1 is High
       {
-        TurnLeft();
+        TurnLeft();//Turn Left( Included in the subrountines below )
       }
-      if(digitalRead(statePin1) && digitalRead(statePin2))
+      if(digitalRead(statePin1) && digitalRead(statePin2))//If Both State 1 and State 2 are High
       {
-        GoStraight();
+        GoStraight();//Make the car go straight
+      }
+      if (!digitalRead(statePin1)) && !digitalRead(statePin2))//If both pins are Low
+      {
+        StopIt();//Make the car stop
       }
 
     }
@@ -637,7 +648,7 @@ void loop()
       Serial.println("Servo duty");
       Serial.println(map(servoread,4000,5000,450,1050));//Print out the servo duty(For debugging)
     ledcWrite(LEDC_CHANNEL_SERVO,servoduty);//PWM to servo motor based on the received duty cycle
-    ledcWrite(LEDC_CHANNEL_WEAPON,weaponduty);
+    ledcWrite(LEDC_CHANNEL_WEAPON,weaponduty);//PWM to the weapon servo on the received weapon duty cycle
 
     cb = 0;//Set the receive pack back to 0
     // ========================== WiFi Control end ==============================
@@ -656,7 +667,7 @@ void receivePacket(){
 // =====================================================================
 // ========================== END OF LOOP ==============================
 // =====================================================================
-void TurnLeft()
+void TurnLeft()//subroutine to control car turn left
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
@@ -664,7 +675,7 @@ void TurnLeft()
   servoduty = 450*LEDC_RESOLUTION/10000;
 }
 
-void TurnRight()
+void TurnRight()//subroutine to control car turn right
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
@@ -672,14 +683,14 @@ void TurnRight()
   servoduty = 1050*LEDC_RESOLUTION/10000;
 }
 
-void GoStraight()
+void GoStraight()//Subroutine to control car go straight
 {
   digitalWrite(A1,HIGH);
   digitalWrite(N_A1,LOW);
   duty = LEDC_RESOLUTION;
   servoduty = 750*LEDC_RESOLUTION/10000;
 }
-void StopIt()
+void StopIt()//Subrountine to stop the car
 {
   servoduty = 750*LEDC_RESOLUTION/10000;
 }
