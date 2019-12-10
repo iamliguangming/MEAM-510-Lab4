@@ -1,9 +1,9 @@
- #define diode 33// output from the circuit
-#define diode2 34    //
+#define diode 33// output from the circuit
+#define diode2 34  //Output from another vive circuit
 
-#define autoMode 4
-#define statePin1 19
-#define statePin2  18
+#define autoMode 4 // Recevie autoMode Flag from pin 4
+#define statePin1 19// Send autoMode Control  1 from pin 19
+#define statePin2  18//Send autoMode Control 2 from pin 18
 
 //#define pulse 22
 int prevT = 0; // the previous time for calculating both the pulse width and the time for x and y distance
@@ -22,23 +22,23 @@ int start2 = 0; // remembers the rising edge of the synce pulse to calculate the
 int counter2 = 0; // counts the sync pulses. If counter = 3, then we know the next pulse is an x pulse.
 int timediff2 = 0; // calculates the time difference between two times, whether for pulse width or x/y distance
 
-float DirectionX;
-float DirectionY;
-float NormalX;
-float NormalY;
+float DirectionX;//The X direction of the car
+float DirectionY;//The Y direction of the car
+float NormalX;//Normalized X direction of the car
+float NormalY;//Normalized Y direction of the car
 
-int autoModeFlag = 1;
-int flagYback = 1;
+int autoModeFlag = 1;//Flag to receive autoMode
+int flagYback = 1;//Flag to help tell the FlagY
 
-int xFront = 0;
-int yFront = 0;
-int xBack =0;
-int yBack = 0;
+int xFront = 0;//initialize xFront location
+int yFront = 0;//initialize yFront Location
+int xBack =0;//initialize x Back location
+int yBack = 0;//initialize y Back location
 
 int steps = 1;
 int turned = 0;
 
-void GoStraight();
+void GoStraight();//function prototype for GoStraight
 void clearSyncPulse(int SignalCleared);
 void TurnRight();
 void TurnLeft();
@@ -205,11 +205,11 @@ void loop() {
   {
     xFront = 0;
   }
- 
+
  if (yFront > 8000)
   {
     yFront = 0;
-  }  
+  }
    if (xBack > 8000)
   {
     xBack = 0;
@@ -246,13 +246,13 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
   float err = 0.02;
 //  flagYback = 1;
 //  Serial.println(flagYback);
-//  if(flagYback == 1){ 
+//  if(flagYback == 1){
 //    Serial.println("        I'm in flag");
 //    if(yBack>=1000){
-//      initialYPos = yBack; 
+//      initialYPos = yBack;
 //      Serial.println(initialYPos);
-//      flagYback = 0; 
-//    }      
+//      flagYback = 0;
+//    }
 //  }
   int bufferDistanceL = 450; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
   int bufferDistanceR = 450;
@@ -363,7 +363,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     if(abs(yFront - initialYPosR) <= wallDistL && turned != 7 && 1+NormalX>= err){
       TurnLeft();
       turned = 3;
-    } 
+    }
     else if(abs(xFront - xfinal) <= 150 && turned != 7 && NormalX <= 0.05){
       TurnLeft();
       turned = 5;
@@ -458,7 +458,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
   }
 //  }
 }
-}                                                                                                                                                                   
+}
 
 //void clearSyncPulse(int SignalCleared)
 //{
