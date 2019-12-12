@@ -1,11 +1,10 @@
-#define diode 33// output from the circuit
-#define diode2 34  //Output from another vive circuit
+#define diode 33 // input to the circuit for the photodiode
+#define diode2 34    //input to the circuit for the photodiode
 
-#define autoMode 4 // Recevie autoMode Flag from pin 4
-#define statePin1 19// Send autoMode Control  1 from pin 19
-#define statePin2  18//Send autoMode Control 2 from pin 18
+#define autoMode 4 // input from main ESP to know when it is autoMode
+#define statePin1 19 // output to the main ESP to tell it how to move
+#define statePin2  18 //output to the main ESP to tell it how to move
 
-//#define pulse 22
 int prevT = 0; // the previous time for calculating both the pulse width and the time for x and y distance
 int currT = 0; // find the current time using micros()
 int flagx = 1; // flag for the x pulse. Returns 0 if we looked at the x pulse and sets y flag = 1
@@ -22,29 +21,24 @@ int start2 = 0; // remembers the rising edge of the synce pulse to calculate the
 int counter2 = 0; // counts the sync pulses. If counter = 3, then we know the next pulse is an x pulse.
 int timediff2 = 0; // calculates the time difference between two times, whether for pulse width or x/y distance
 
-float DirectionX;//The X direction of the car
-float DirectionY;//The Y direction of the car
-float NormalX;//Normalized X direction of the car
-float NormalY;//Normalized Y direction of the car
+float DirectionX; // takes the difference of the x positions of the 2 Vive signals and finds the x component of the vector it is pointing to
+float DirectionY; // take the difference of the y positions of the Vive signals and finds the y component of the vector
+float NormalX; // Normalizes the Direction X to  be a value from 0-1
+float NormalY; // Normalizes the DIrectionY to be a value from 0-1
 
-int autoModeFlag = 1;//Flag to receive autoMode
-int flagYback = 1;//Flag to help tell the FlagY
+int xFront = 0; // The front Vive's x position
+int yFront = 0; // Front vive's y position
+int xBack =0; // back vive's x position
+int yBack = 0; // back vive's y position
 
-int xFront = 0;//initialize xFront location
-int yFront = 0;//initialize yFront Location
-int xBack =0;//initialize x Back location
-int yBack = 0;//initialize y Back location
+int turned = 0; // a counter that tells the autonomous mode what step it is on/ should go to
 
-int steps = 1;
-int turned = 0;
+void GoStraight(); // tells the main ESP to tell the robot to go straight
+void TurnRight(); // tells the car to turn right
+void TurnLeft(); // tells the car to turn left
+void StopIt(); // stops the car
 
-void GoStraight();//function prototype for GoStraight
-void clearSyncPulse(int SignalCleared);
-void TurnRight();
-void TurnLeft();
-void StopIt();
-
-void IRAM_ATTR calcT(){ // interrupt function
+void IRAM_ATTR calcT(){ // interrupt function for Vive
   if(digitalRead(diode) == LOW){ // This checks for pulse width
     currT = micros(); // finds time in microseconds
     timediff = currT - prevT; // calculate time of the pulse width
@@ -86,7 +80,7 @@ void IRAM_ATTR calcT(){ // interrupt function
       if(flagx){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
         // Serial.print("    x time:"); // print the x time distance
         // Serial.println(timediff);
-        if(timediff >=1000 && timediff <=8000){
+        if(timediff >=1000 && timediff <=8000){ // checks if the signal received is a value from 1000-8000. Any value smaller that 1000 is a bad value, and any value greater that 8000 means the Vive picked up a sync to sync pulse signal, which means the signal was blocked
           xFront = timediff;
         }
         else{
@@ -97,7 +91,7 @@ void IRAM_ATTR calcT(){ // interrupt function
       else{ // on y pulse
         // Serial.print("      y time:"); // print the y time distance
         // Serial.println(timediff);
-        if(timediff >=1000 && timediff <=8000){
+        if(timediff >=1000 && timediff <=8000){ // checks if the signal received is a value from 1000-8000. Any value smaller that 1000 is a bad value, and any value greater that 8000 means the Vive picked up a sync to sync pulse signal, which means the signal was blocked
           yFront = timediff;
         }
         else{
@@ -151,7 +145,7 @@ void IRAM_ATTR calcT2(){ // interrupt function
       if(flagx2){ // checks the x flag. If x flag is on here, then we are on the x pulse. Else, on the y pulse.
         // Serial.print("    x2 time:"); // print the x time distance
         // Serial.println(timediff2);
-        if(timediff2 >=1000 && timediff2 <=8000){
+        if(timediff2 >=1000 && timediff2 <=8000){ // checks if the signal received is a value from 1000-8000. Any value smaller that 1000 is a bad value, and any value greater that 8000 means the Vive picked up a sync to sync pulse signal, which means the signal was blocked
           xBack = timediff2;
         }
         else{
@@ -162,7 +156,7 @@ void IRAM_ATTR calcT2(){ // interrupt function
       else{ // on y pulse
         // Serial.print("      y2 time:"); // print the y time distance
         // Serial.println(timediff2);
-        if(timediff2 >=1000 && timediff2 <=8000){
+        if(timediff2 >=1000 && timediff2 <=8000){ // checks if the signal received is a value from 1000-8000. Any value smaller that 1000 is a bad value, and any value greater that 8000 means the Vive picked up a sync to sync pulse signal, which means the signal was blocked
           yBack = timediff2;
         }
         else{
@@ -178,7 +172,7 @@ void IRAM_ATTR calcT2(){ // interrupt function
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200); // initialize serial
-  pinMode(diode,INPUT);
+  pinMode(diode,INPUT); // sets up the pinModes
   pinMode(diode2,INPUT);
   pinMode(autoMode,INPUT);
   pinMode(statePin1,OUTPUT);
@@ -187,29 +181,26 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(diode), calcT, CHANGE); // make the interrupt
   attachInterrupt(digitalPinToInterrupt(diode2),calcT2, CHANGE);
 
-  int turned = 0;
+  int turned = 0; // reset the counter value to 0 everytime it sets up
 }
 
-int countup = 1;
-int xfinal = 3205;
-int yfinal = 3537;
-int flagTime = 1;
-int initialYPos = 0;
-int flagLR = 0;
-int flagCheckLR = 1;
+int xfinal = 3205; // If starting on the left side, this was the final position we wanted to go to to hit the button
+int yfinal = 3537; // the y position of the button
+int flagLR = 0; // a one-time flag that sees if I am on the left or right side of the final position. This was added since it was possible to go past the final position on accident, which caused the code to switch over and start running the other side's code. (ex. We are supposed to turn right and hit the button, but since it went past the final position, it turned left instead, which was what it was supposed to do if we started on the other side)
+int flagCheckLR = 1; // Same as above. This tells me that I only want this flag to be triggered once. Once it is set to 0, it will never get set to 1 unless restarted.
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  if (xFront > 8000)
+  if (xFront > 8000) // checking again if we had a sync to sync pulse
   {
     xFront = 0;
   }
-
+ 
  if (yFront > 8000)
   {
     yFront = 0;
-  }
+  }  
    if (xBack > 8000)
   {
     xBack = 0;
@@ -219,9 +210,9 @@ void loop() {
     yBack= 0;
   }
 
-if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
+if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000)) // checking if we had bad data
 {
-  Serial.print("xFront: ");
+  Serial.print("xFront: "); // print out statements for debugging
   Serial.println(xFront);
   Serial.print("yFront: ");
   Serial.println(yFront);
@@ -229,62 +220,53 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
   Serial.println(xBack);
   Serial.print("yBack: ");
   Serial.println(yBack);
-  DirectionX = xFront - xBack;
+  DirectionX = xFront - xBack; // finds the difference in x position between the 2 vives
   Serial.println(DirectionX);
   Serial.println(DirectionX * DirectionX);
-  DirectionY = yFront - yBack;
+  DirectionY = yFront - yBack; // finds the difference in the y positions between the 2 vives
   Serial.println(DirectionY);
   Serial.println(DirectionY * DirectionY);
-  float NormalX = DirectionX / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
-  float NormalY = DirectionY / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY));
+  float NormalX = DirectionX / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY)); // Normalizes them to be a value from 0-1
+  float NormalY = DirectionY / sqrt((DirectionX * DirectionX) + (DirectionY * DirectionY)); // Normalizes them to be a value from 0-1
   Serial.print("NormalX");
   Serial.println(NormalX);
   Serial.print("NormalY");
   Serial.println(NormalY);
 //  GoStraight();
 
-  float err = 0.02;
-//  flagYback = 1;
-//  Serial.println(flagYback);
-//  if(flagYback == 1){
-//    Serial.println("        I'm in flag");
-//    if(yBack>=1000){
-//      initialYPos = yBack;
-//      Serial.println(initialYPos);
-//      flagYback = 0;
-//    }
-//  }
-  int bufferDistanceL = 450; // replace this with the distance you want to be from the final position. This is used to keep the radius of curvature in mind.
-  int bufferDistanceR = 450;
-  int initialYPosR = 2041;
-  int initialYPosL = 6045;
-  int wallDistL = 200;
+  float err = 0.02; // set a leeway for the car to turn so that it has some room for error when driving
 
-  if(flagCheckLR){
-    if(yFront>=yfinal){
+  int bufferDistanceL = 450; // this is the value we have for making sure we have enough room to turn. This value is updated in the if statements below since the field and Vive placement was shit, so tuning had to be done
+  int bufferDistanceR = 450; // same as above, but for the right side
+  int initialYPosR = 2041; // This is for the side walls. We used this number for making sure we dont get too close to it
+  int initialYPosL = 6045; // same as above
+  int wallDistL = 200; // this is the distance we wanted to keep from the walls so that we could turn and not bump into the wall.
+
+  if(flagCheckLR){ // checks if we are on the left side of right side of our final destination
+    if(yFront>=yfinal){ // if my vive sensor is on the left of the final position
       flagLR = 1; // Left
     }
     else{
       flagLR = 0; // Right
     }
-    flagCheckLR = 0;
+    flagCheckLR = 0; // set to 0 and never reset it. This locks in our position of being on one side
   }
 
-  if(flagLR){ // im on the left side
+  if(flagLR){ // im on the left side. HOWEVER, THE LEFT SIDE CODE DOES NOT WORK PROPERLY AS WE ONLY HAD TIME TO CONFIGURE FOR THE RIGHT SIDE. PLEASE SKIP TO THE RIGHT SIDE CODE
 //    if(NormalX != 0 && NormalY != 0){
     Serial.println("          I'm in left side");
-    if(turned == 0){
+    if(turned == 0){ // first step
       Serial.println("                  I'm in 0");
       if(1+NormalX >= err){ // until I face North
         TurnLeft();
       }
       else{
         Serial.println("        I turned");
-        StopIt();
+        StopIt(); // this command is helpful when breaking the code in chunks. Without this command, the program will keep turning even though the value of turned incremented
         turned = 1;
       }
     }
-    else if(turned == 1){
+    else if(turned == 1){ // 2nd step
       Serial.println(initialYPos);
       if(1-NormalY >= err && ((initialYPosL - yFront ) >= wallDistL)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
         Serial.println("                  I'm in 1!!!!!!!");
@@ -293,9 +275,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
       else{
         Serial.println("        I turned again");
         StopIt();
-//        if(initialYPos >= 1000){
-          turned = 2;
-//        }
+        turned = 2;
       }
     }
       else if(turned == 2){
@@ -356,20 +336,20 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     }
 //  }
   }
-  else{
-    int xfinal = 3211;
-    int yfinal = 4302; // temp position of the blue button
+  else{ // THIS IS THE RIGHT SIDE CODE, WHERE MOST OF THE COMMENTS WILL BE PLACED AND HAVE IMPORTANCE.
+    int xfinal = 3211; // x position of the blue button
+    int yfinal = 4302; // y position of the blue button
 //    if(NormalX != 1.00 && NormalY != 1.00){
-    if(abs(yFront - initialYPosR) <= wallDistL && turned != 7 && 1+NormalX>= err){
+    if(abs(yFront - initialYPosR) <= wallDistL && turned != 7 && 1+NormalX>= err){ // this is for the side wall. Supposed to help steer us away from the walls in auto mode.
       TurnLeft();
-      turned = 3;
-    }
-    else if(abs(xFront - xfinal) <= 150 && turned != 7 && NormalX <= 0.05){
+      turned = 3; // skip to the "go straight" part of the code. Reason why we did not go to turned = 2 is because sometimes the car would turn too far, making it keep turning left forever
+    } 
+    else if(abs(xFront - xfinal) <= 150 && turned != 7 && NormalX <= 0.05){ // this is for the ramp wall, making sure we dont run into it until the last step when we want to hit the button
       TurnLeft();
-      turned = 5;
+      turned = 5; // skip to the "go straight" part of the code so we dont keep turning left.
     }
     else{
-    if(turned == 0){
+    if(turned == 0){ //step-by-step process
       Serial.println("          I'm in right side");
       Serial.println("                  I'm in 0");
       if(1+NormalX >= err && NormalY <=0){ // until I face North
@@ -386,21 +366,19 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     }
     else if(turned == 1){
       Serial.println(initialYPos);
-      if(1+NormalY >= err && ((yFront - initialYPosR) >= wallDistL)){ // insert distance from "wall" here // May need a smaller than 1 foot buffer here.
+      if(1+NormalY >= err && ((yFront - initialYPosR) >= wallDistL)){ //This is to keep turning right until I am facing right OR I am close enough to the wall where I need to make a left turn now to face north 
         Serial.println("                  I'm in 1!!!!!!!");
         TurnRight();
       }
       else{
         Serial.println("        I turned again");
         StopIt();
-//        if(initialYPos >= 1000){
-          turned = 2;
-//        }
+        turned = 2;
       }
     }
       else if(turned == 2){
         Serial.println("                  I'm in 2");
-        if(1 + NormalX >= 0.005){
+        if(1 + NormalX >= 0.005){ // Here, I want to face North
           TurnLeft();
         }
         else{
@@ -410,7 +388,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
       }
     else if(turned == 3){
       Serial.println("                  I'm in 3");
-      if(abs(xfinal - xFront) >= bufferDistanceL){ // input around 1 foot here. This is the radius of curvature
+      if(abs(xfinal - xFront) >= bufferDistanceL){ // I need to keep going straight until I reach a certain distance so that I can make a turn
         GoStraight();
       }
       else{
@@ -421,7 +399,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     else if(turned == 4){
       Serial.println("                  I'm in 4");
 //      if(1 - NormalY >= 0.25*err){
-      if(NormalX <=0.05){
+      if(NormalX <=0.05){ // I want to keep turning, but dont stop until I reach a bit further than parallel to the x axis. The reason is because the car leans to the right, so we need to make the angle to the left so that it goes "straight" to the button
         TurnLeft();
       }
       else{
@@ -431,7 +409,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     }
     else if(turned == 5){
       Serial.println("                  I'm in 5");
-      if(abs(yFront - yfinal) >= bufferDistanceL-280){// may need a different buffer Distance !!!!!!!!!!!!!!!
+      if(abs(yFront - yfinal) >= bufferDistanceL-280){// Keep straight until I am almost near the button
         GoStraight();
       }
       else{
@@ -441,7 +419,7 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     }
     else if(turned == 6){
       Serial.println("                  I'm in 6");
-      if(1+NormalX >= err){
+      if(1+NormalX >= err){ // turn into the button
           TurnRight();
           Serial.println("Im turning Right");
       }
@@ -452,52 +430,17 @@ if ((xFront>=1000) && (yFront>=1000) && (xBack>=1000) && (yBack>=1000))
     }
     else{
       Serial.println("                  I'm in 7");
-      GoStraight();
+      GoStraight(); // keep going straight into the button. The reason why I did not kill the motors was that if there was someone who came by and pushed us, it would be harder for them to do so
     }
   }
   }
 //  }
 }
-}
+}                                                                                                                                                                   
 
-//void clearSyncPulse(int SignalCleared)
-//{
-//  Serial.println("Im in");
-//  Serial.print(countup);
-//  Serial.print(" :");
-//  Serial.println(SignalCleared);
-//  if (SignalCleared > 8000)
-//  {
-//    SignalCleared = 0;
-//  }
-//  Serial.println("Im Out");
-//
-//}
-// void GoStraight(int Xway, int Yway, float NormalX, float NormalY)
-// {
-//   digitalWrite(A1,HIGH);
-//   digitalWrite(N_A1,LOW);
-//   ledcWrite(LEDC_CHANNEL,fullduty);
-//    if (Xway == 1 && Yway == 0 )
-//    {
-//     ServoAngleDuty = map((NormalY-Yway)*1000,-1000,1000,450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
-//    }
-//    else if (Xway == -1 && Yway == 0)
-//   {
-//     ServoAngleDuty = map ((NormalY - Yway)*1000,1000,-1000,450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
-//   }
-//   else if (Xway == 0 && Yway == 1 )
-//   {
-//     ServoAngleDuty = map((NormalX - Xway) * 1000,-1000,1000, 450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
-//   }
-//   else if (Xway == 0 && Yway == -1)
-//   {
-//     ServoAngleDuty = map((NormalX - Xway) * 1000, 1000,-1000, 450*LEDC_RESOLUTION/10000,1050*LEDC_RESOLUTION/10000);
-//   }
-//   ledcWrite(LEDC_CHANNEL_SERVO,ServoAngleDuty);
-// }
 
-void TurnLeft()
+// Below are the different ways we were able to tell the main ESP how we wanted the servo and motors to work
+void TurnLeft() 
 {
   digitalWrite(statePin1,HIGH);
   digitalWrite(statePin2,LOW);
